@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import net from 'node:net';
 import AlexaRemote from 'alexa-remote2';
+import { normalizeEchoQueue } from './echo-queue.mjs';
 import { AppError, buildMusicCommand } from './catalog.mjs';
 import { fallbackMusicProviders, parseMusicProviders, resolveMusicProvider, resolveDiscoveredMusicProvider } from './music-providers.mjs';
 import { CommandJournal, normalizeCustomCommand } from './command-journal.mjs';
@@ -520,6 +521,11 @@ export class AlexaBridge {
     this.busy = true;
     this.lastCommandAt = Date.now();
     try { return await fn(); } finally { this.busy = false; }
+  }
+  async playerQueue(deviceId) {
+    this.requireDevice(deviceId);
+    const value = await this.call('getPlayerQueue', [deviceId, 50], 'Alexa could not provide its upcoming songs.');
+    return normalizeEchoQueue(value);
   }
   async player(deviceId, { fresh = false } = {}) {
     this.requireDevice(deviceId);

@@ -1,5 +1,5 @@
 export const HELPER = 'http://127.0.0.1:4320';
-const getRoutes = new Set(['/api/status', '/api/search', '/api/player', '/api/music-providers', '/api/commands', '/api/local-playlists', '/api/queue/items', '/api/playlists', '/api/apple/config']);
+const getRoutes = new Set(['/api/status', '/api/search', '/api/player', '/api/music-providers', '/api/commands', '/api/local-playlists', '/api/queue/items', '/api/echo-queue', '/api/playlists', '/api/apple/config']);
 const postRoutes = new Set(['/api/connect', '/api/disconnect', '/api/play', '/api/play-selection', '/api/music-request-check', '/api/cancel-playback', '/api/volume', '/api/seek', '/api/control', '/api/command', '/api/playlist-import/preview', '/api/local-playlists/import', '/api/local-playlists', '/api/queue/items', '/api/queue/control', '/api/queue/mode', '/api/queue', '/api/play-playlist', '/api/apple/setup', '/api/apple/connect', '/api/apple/disconnect', '/api/spotify/setup', '/api/spotify/connect', '/api/spotify/disconnect', '/api/youtube/setup', '/api/youtube/connect', '/api/youtube/disconnect']);
 const local = /^\/api\/local-playlists\/[A-Za-z0-9_-]{1,100}$/u;
 const localSource = /^\/api\/local-playlists\/[A-Za-z0-9_-]{1,100}\/source$/u;

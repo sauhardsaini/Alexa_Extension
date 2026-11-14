@@ -46,6 +46,7 @@ async function fixture(t, { importer, catalog } = {}) {
   };
   const queue = {
     status: () => queueState,
+    clear(_id, options) { queueState = null; events.push({ type: 'queue-clear', options }); return { queue: null }; },
     cancel(message) { if (queueState) queueState = { ...queueState, active: false, state: 'cancelled' }; events.push({ type: 'queue-cancel', message }); return queueState; },
     startLocal(context) { events.push({ type: 'queue-start', context }); queueState = { id: 'local-queue', state: 'preparing', active: true, ...context }; return { queue: queueState }; },
     async enqueue(context) { events.push({ type: 'enqueue', context }); queueState = { id: 'queue-items', state: 'ready', active: true, country: context.country, providerId: context.providerId }; return { queue: queueState }; },
@@ -108,7 +109,7 @@ test('pasted playlists can queue in saved order or request their original suppor
   assert.equal(queued.status, 202); assert.deepEqual(f.events.find(row => row.type === 'queue-start').context.playlist.tracks.map(track => track.title), [song.title, 'Second song']);
   assert.equal((await f.request('/api/local-playlists/' + playlist.id + '/play-native', { deviceId: device, country: 'IN', providerId: 'spotify' })).status, 409);
   const native = await f.request('/api/local-playlists/' + playlist.id + '/play-native', { deviceId: device, country: 'IN', providerId: 'apple-music' });
-  assert.equal(native.status, 202); assert.equal(f.events.find(row => row.type === 'native-playlist').playlist.title, 'Original list');
+  assert.equal(native.status, 202); assert.equal(native.body.queue, null); assert.equal(f.library.queue.status(), null); assert.equal(f.events.find(row => row.type === 'queue-clear').options.keepCurrent, false); assert.equal(f.events.find(row => row.type === 'native-playlist').playlist.title, 'Original list');
 });
 
 test('search results enqueue as trusted country-bound songs without a music webpage', async t => {

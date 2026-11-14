@@ -213,9 +213,15 @@ Click a song's thumbnail/play button to start from it and queue a complete cycle
 
 Without Repeat All, the cycle ends after song 4. With Repeat All enabled, song 5 starts the next cycle. **Shuffle**, to the left of Previous, changes upcoming order. **Repeat All**, to the right of Next, repeats the cycle. These modes control the helper's song queue, not a music website or a provider's native playlist mode.
 
-The queue sidebar lets you inspect and edit upcoming songs. Play/pause, previous/next, seeking, and volume target the selected Echo; availability depends on its reported state and the music service. The helper watches playback to advance its own queue. Device changes or an unverified recording can pause that process and require attention.
+The queue sidebar lets you inspect and edit upcoming songs. **Clear queue** removes pending songs without stopping the music currently playing; it remains available for a stopped or replaced queue that still has upcoming songs. Starting another playlist replaces the previous queue. **Play playlist directly** clears the app queue completely before handing playback to Alexa’s music service. Play/pause, previous/next, seeking, and volume target the selected Echo; availability depends on its reported state and the music service. The helper watches playback to advance its own queue. Device changes or an unverified recording can pause that process and require attention.
 
 Where offered, **Play playlist directly** asks Alexa to play the named playlist through its native service. This is separate from the helper's song-by-song queue; Alexa still needs to recognize and have access to that playlist.
+
+### Alexa’s own queue
+
+When there is no active app queue or pending app songs, the Queue sidebar shows **Alexa queue**. It reads the selected Echo’s reported queue, including playback started by voice or **Play playlist directly**. The current song comes from Echo’s player report rather than a previous app queue. Upcoming entries are read-only and shown only when Alexa returns them; unreported ordering is labelled “Reported by Alexa.”
+
+The view refreshes about every 20 seconds while visible and has a **Refresh** button. Alexa may expose a partial list or no upcoming songs, even while music continues automatically. The app explains that limitation rather than filling in guessed songs. The live Apple Music check returned no usable upcoming-song list for the tested playback. Playback controls continue to work independently of queue visibility.
 
 ### When Alexa plays the wrong song
 
@@ -223,11 +229,11 @@ After all song-request attempts fail with a confirmed mismatch, the helper can k
 
 ### Recover a queue after a manual correction
 
-If a queued song cannot be confirmed, the remaining queue stays available. After a manual command starts identifiable music, the helper waits for two stable observations with advancing song progress, inserts that actual song immediately after the failed item, and treats it as current without requesting it again.
+If a queued song cannot be confirmed, the remaining queue stays available. After a typed command from the Commands sidebar starts identifiable music within its 30-second observation window, the helper waits for two stable observations with advancing song progress, inserts that actual song immediately after the failed item, and treats it as current without requesting it again.
 
 For example, if item 5 of 10 fails, a manually started song becomes item 6; the original items 6–10 become 7–11. **Next** and automatic end detection continue with the original item 6. Pending song IDs/order, the queue identity, and Shuffle/Repeat All settings are retained. The adopted song is monitored on its actual reported service; later queued songs still use the queue's selected service.
 
-Typed commands keep queue ownership while cancelling automatic song retries. An unrelated command does not insert an unchanged song. If an already-confirmed current song continues after the command, monitoring resumes without an extra queue item. A failed queue also watches reported playback for spoken/external corrections while the helper runs, with slower polling after the initial recovery period. This inference uses song metadata/progress and cannot distinguish a voice request from a service's own automatic song change. Missing song identity, duration, provider, or progress leaves the queue waiting for confirmation. Explicit Clear/Cancel or a new selection stops the old recovery watcher.
+Typed commands keep queue ownership while cancelling automatic song retries. An unrelated command does not insert an unchanged song. If an already-confirmed current song continues after the command, monitoring resumes without an extra queue item. A spoken or outside playback change now clears the app queue after two stable observations with advancing song progress, instead of inserting the new song into it. The app does not send Pause or Stop for that handoff. The queue monitor and player refreshes can observe such changes; a failed queue also watches with slower polling after its initial recovery period. This uses song metadata/progress and cannot distinguish a voice request from a service's own automatic song change, or reliably identify a request that leaves the recording unchanged. Missing song identity, duration, provider, or progress leaves the queue waiting for confirmation. Explicit Clear/Cancel or a new selection stops the old recovery watcher.
 
 ### Commands sidebar
 
@@ -313,9 +319,9 @@ App-owned questions and confirmations use dialogs inside Echo Library rather tha
 
 ## Mac Now Playing and media keys
 
-Use **Enable Mac media controls** in the sidebar to opt into a local browser media-session proxy. It publishes the reported Echo title/artist/artwork and routes Play/Pause/Next/Previous through the same controls as the app, preserving queue routing. A looping 10-second WAV containing only zero PCM samples requests local media playback; the music still streams only on the Echo.
+Mac media controls are **enabled by default** and start automatically when Echo Library opens. Use the sidebar button to turn them off or back on; that choice is remembered in this browser. The feature uses a local browser media-session proxy. It publishes the reported Echo title/artist/artwork and routes Play/Pause/Next/Previous through the same controls as the app, preserving queue routing. A looping 10-second WAV containing only zero PCM samples requests local media playback; the music still streams only on the Echo.
 
-Keep the enabled tab and helper open, including while the tab is in the background. Enable again after a page reload. Keep the tab unmuted: its carrier contains silence, and muting it can remove system media focus. Another media app can become the active system player. Updates follow Echo reporting, so allow a few seconds between controls.
+Keep the enabled tab and helper open, including while the tab is in the background. Your enabled preference is restored after a page reload. If the browser blocks automatic local playback, the app explains that a click is needed and retries on your next click or keypress in Echo Library. For activation without that click in Brave, open the address-bar site information → Site settings for `http://127.0.0.1:4320` and explicitly set **Autoplay** and **Sound** to **Allow**, then reload. “Allow (default)” / “Automatic” can still leave browser activation rules in effect. This local-site setup was verified after reload. Keep the tab unmuted: its carrier contains silence, and muting it can remove system media focus. Another media app can become the active system player. Updates follow Echo reporting, so allow a few seconds between controls.
 
 Verified locally in Brave on macOS: Now Playing shows Echo song details, and keyboard Play/Pause/Next/Previous control Echo, including the app playlist queue. The silent player pauses along with Echo so the next media-key press sends Resume. Other browser and macOS versions may behave differently.
 

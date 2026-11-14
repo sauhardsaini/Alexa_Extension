@@ -76,7 +76,7 @@ function harness({ response, saved = {} } = {}) {
     const value = response ? await response(path, options, defaultResponse) : await defaultResponse(path);
     return { ok: true, status: 200, json: async () => value };
   };
-  const expose = "\n  globalThis.library = { state, search, sendTrack, setBrowseView, loadPlaylists, openPlaylistImport, loadPlaylistImport, savePlaylistImport, renderPlaylistImport, refreshStatus, chooseCataloguePlatform, connectOAuth, saveOAuthSetup, connectApple, loadMusicKit, applyQueue, sendCustomCommand, control, queueControl, cancelPlayback, renderQueue };\n";
+  const expose = "\n  globalThis.library = { state, search, sendTrack, setBrowseView, loadPlaylists, openPlaylistImport, loadPlaylistImport, savePlaylistImport, renderPlaylistImport, refreshStatus, chooseCataloguePlatform, connectOAuth, saveOAuthSetup, connectApple, loadMusicKit, applyQueue, sendCustomCommand, control, queueControl, cancelPlayback, renderQueue, refreshEchoQueue };\n";
   vm.runInContext(script.replace(/\}\(\)\);\s*$/u, expose + '}());'), context);
   return { get, nodes, calls, messages, timers, context, library: context.library, stored, popups };
 }
@@ -220,4 +220,55 @@ test('queue Clear remains available during a manual request and its late respons
   await h.library.queueControl('clear'); pending.resolve({ queue: adopted }); await sending;
   assert.equal(h.library.state.queue.active, false); assert.equal(h.library.state.queue.items.length, 10);
   assert.deepEqual(h.calls.find(call => call.path === '/api/queue/control').body, { action: 'clear', requestId: failed.id });
+});
+
+test('stopped queues with pending songs keep Clear available without re-enabling playback controls', async () => {
+  for (const terminal of ['cancelled', 'error']) {
+    const stopped = { ...failedManualQueue(), active: false, state: terminal, message: 'Replaced by your direct playlist request.' };
+    const cleared = { ...stopped, items: stopped.items.slice(0, stopped.index + 1), total: stopped.index + 1 };
+    const h = harness({ response: async (path, options, fallback) => path === '/api/queue/control' ? { queue: cleared } : fallback(path, options) }); await flush();
+    h.library.applyQueue({ ...stopped, active: true, state: 'playing' }, { fromMutation: true });
+    h.library.applyQueue(stopped, { fromMutation: true }); assert.equal(h.get('queue-items').children[0].children[0].children[0].textContent, 'LAST QUEUED'); const oldEpoch = h.library.state.queueEpoch;
+    assert.equal(h.get('queue-cancel').hidden, false); assert.equal(h.get('queue-cancel').disabled, false);
+    assert.equal(h.get('queue-toggle').hidden, true); assert.equal(h.get('queue-next').hidden, true);
+    await h.library.queueControl('next'); assert.equal(h.calls.some(call => call.path === '/api/queue/control'), false);
+    await h.library.queueControl('clear');
+    assert.deepEqual(h.calls.find(call => call.path === '/api/queue/control').body, { action: 'clear', requestId: stopped.id });
+    assert.equal(h.library.state.queue.items.some(item => item.state === 'pending'), false);
+    assert.equal(h.get('queue-cancel').hidden, true);
+    h.library.applyQueue(stopped, { queueEpoch: oldEpoch });
+    assert.equal(h.library.state.queue.items.length, cleared.items.length);
+    assert.equal(h.calls.some(call => ['/api/control', '/api/play', '/api/command'].includes(call.path)), false);
+  }
+});
+
+test('a direct saved-playlist response clears the old sidebar queue immediately', async () => {
+  const h = harness({ response: async (path, options, fallback) => path.endsWith('/play-native') ? { status: 'sent', queue: null } : fallback(path, options) }); await flush();
+  h.library.applyQueue(failedManualQueue(), { fromMutation: true });
+  Object.assign(h.library.state, { providerId: 'apple-music', providers: [{ id: 'apple-music', name: 'Apple Music', kind: 'music' }], localPlaylist: { id: 'saved', country: 'IN', origin: { source: 'apple-music', name: 'Original' }, tracks: [TRACK] } });
+  await h.get('local-playlist-native-play').dispatch('click');
+  assert.ok(h.calls.some(call => call.path === '/api/local-playlists/saved/play-native'));
+  assert.equal(h.library.state.queue, null); assert.equal(h.get('queue-cancel').hidden, true);
+  assert.equal(h.get('queue-items').children[0].textContent, 'Your queue is empty.');
+});
+
+
+test('the Alexa queue view uses actual Echo current metadata and displays only reported songs', async () => {
+  const h = harness({ response: async (path, options, fallback) => path.startsWith('/api/echo-queue') ? { state: 'available', items: [{ id: 'reported', title: 'Reported next', artist: 'Artist', state: 'reported' }], message: 'Reported list may be partial.' } : fallback(path, options) }); await flush();
+  const old = failedManualQueue(); h.library.applyQueue({ ...old, active: false, state: 'cancelled', items: old.items.slice(0,5) }, { fromMutation: true });
+  h.library.state.player = { deviceId: 'echo', state: 'PLAYING', title: 'Actual Echo song', artist: 'Actual Artist' }; h.library.state.queueOpen = true; h.library.renderQueue();
+  assert.equal(h.get('app-queue-summary').hidden, true); assert.equal(h.get('queue-items').hidden, true); assert.equal(h.get('echo-native-queue').hidden, false);
+  assert.match(h.get('echo-native-current').textContent, /Actual Echo song/); assert.doesNotMatch(h.get('echo-native-current').textContent, /Song 5/);
+  await h.library.refreshEchoQueue(); assert.match(h.get('echo-native-message').textContent, /partial/);
+  assert.equal(h.get('echo-native-items').children[0].children[0].children[1].textContent, 'Reported next');
+  assert.equal(h.calls.filter(call => call.path.startsWith('/api/echo-queue')).length, 1);
+});
+
+test('a late Alexa queue read cannot replace a newly started app queue', async () => {
+  const pending = gate();
+  const h = harness({ response: async (path, options, fallback) => path.startsWith('/api/echo-queue') ? pending.promise : fallback(path, options) }); await flush();
+  h.library.state.queueOpen = true; const reading = h.library.refreshEchoQueue(); await flush();
+  const app = failedManualQueue(); ++h.library.state.queueEpoch; h.library.applyQueue(app, { fromMutation: true });
+  pending.resolve({ state: 'available', items: [{ title: 'Old Alexa song' }] }); await reading;
+  assert.equal(h.library.state.queue.id, app.id); assert.equal(h.get('echo-native-queue').hidden, true); assert.equal(h.library.state.echoQueue, null);
 });

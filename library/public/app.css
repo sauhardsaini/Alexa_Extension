@@ -107,3 +107,7 @@ select,.sidebar select,.search-form select,.playlist-toolbar select,.playlist-di
 .player-queue-warning{color:var(--accent);font-size:11px;line-height:1.4;max-width:540px;overflow-wrap:anywhere}.app-confirm-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px}
 
 .mac-media-section{border-top:1px solid var(--border);margin-top:24px;padding-top:22px}.mac-media-section .button{font-size:11px;justify-content:center;background:var(--surface-raised);border:1px solid var(--border-strong)}.mac-media-section .button[aria-pressed="true"]{background:var(--accent-light);border-color:var(--accent-border);color:var(--accent)}
+
+.echo-native-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.echo-native-heading h2{font-size:17px}.echo-native-queue>p{font-size:11px;line-height:1.7;color:var(--muted)}.echo-native-queue .queue-items{max-height:none;overflow:visible}
+
+.echo-native-heading .song-small-button{width:auto;min-width:70px;padding:7px 12px;flex:none}

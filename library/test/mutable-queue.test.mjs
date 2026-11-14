@@ -211,3 +211,46 @@ test('invalid local playlist or ready Start validation never cancels existing pl
   await assert.rejects(d.queue.control('resume'), { code: 'QUEUE_NOT_STARTED' });
   assert.equal(d.queue.status().state, 'ready'); assert.equal(d.commands.length, 0); d.queue.cancel();
 });
+
+test('native playlist handoff discards all old queue entries without a playback control', async () => {
+  for (const state of ['playing', 'ready', 'cancelled']) {
+    const c = setup({ initial: state === 'ready' ? { state: 'STOPPED' } : current() });
+    await c.add(); await c.add(song('Old tail')); await flush();
+    if (state === 'cancelled') c.queue.cancel('Replaced by a direct playlist.');
+    const id = c.queue.status().id;
+    const result = c.queue.clear(id, { keepCurrent: false }); await flush();
+    assert.equal(result.queue, null); assert.equal(c.queue.status(), null);
+    assert.equal(c.commands.length, 0); assert.equal(c.controls.length, 0);
+    assert.equal(c.queue.observePlayer('echo1', current(2000)), false);
+  }
+});
+
+test('two stable advancing outside-song observations clear an app queue without controlling Echo', async () => {
+  for (const mode of ['playing', 'paused', 'cancelled', 'ready']) {
+    const c = setup({ initial: current(1000, { state: mode === 'ready' ? 'STOPPED' : mode === 'paused' ? 'PAUSED' : 'PLAYING' }) }); await c.add(); await flush();
+    if (mode === 'cancelled') c.queue.cancel();
+    const outside = { ...current(), title: 'Voice-requested song', artist: 'Outside artist', mediaId: 'outside' };
+    assert.equal(c.queue.observePlayer('other', outside), false);
+    assert.equal(c.queue.observePlayer('echo1', outside), false); assert.ok(c.queue.status());
+    assert.equal(c.queue.observePlayer('echo1', outside), false); assert.ok(c.queue.status());
+    assert.equal(c.queue.observePlayer('echo1', { ...outside, positionMs: 2000 }), true);
+    assert.equal(c.queue.status(), null); assert.equal(c.commands.length, 0); assert.equal(c.controls.length, 0);
+  }
+});
+
+test('own playback, missing metadata and unstable outside samples do not clear the queue', async () => {
+  const c = setup(); await c.add(); await flush(); const id = c.queue.status().id;
+  assert.equal(c.queue.observePlayer('echo1', current(2000)), false);
+  const outside = { ...current(), title: 'Outside song', artist: 'Outside artist', mediaId: 'outside' };
+  c.queue.observePlayer('echo1', outside); c.queue.observePlayer('echo1', { ...outside, artist: '' });
+  assert.equal(c.queue.observePlayer('echo1', { ...outside, positionMs: 2000 }), false);
+  assert.equal(c.queue.status().id, id); c.queue.cancel();
+});
+
+test('the helper monitor confirms an outside takeover even without a player UI poll', async () => {
+  const c = setup(); await c.add(); await flush();
+  const outside = { ...current(), title: 'Outside song', artist: 'Other artist', mediaId: 'new' };
+  await c.step(outside); assert.equal(c.queue.status().state, 'needs_attention');
+  await c.step({ ...outside, positionMs: 2000 }); assert.equal(c.queue.status(), null);
+  assert.equal(c.commands.length, 0); assert.equal(c.controls.length, 0);
+});

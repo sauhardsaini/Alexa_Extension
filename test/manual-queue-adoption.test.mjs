@@ -34,7 +34,7 @@ async function fixture(t) {
   await queue.current.task;
   assert.equal(queue.status().state, 'needs_attention');
   t.after(() => queue.cancel());
-  return { queue, playback, commands, custom, monitor, adoption, setLive(value) { live = value; } };
+  return { queue, playback, commands, custom, monitor, adoption, advance(ms) { time += ms; }, setLive(value) { live = value; } };
 }
 function observe(queue, first = manual(1000), second = manual(2000)) {
   assert.equal(queue.observePlayer('echo', first), false);
@@ -42,7 +42,7 @@ function observe(queue, first = manual(1000), second = manual(2000)) {
 }
 
 test('a manually corrected fifth song inserts as sixth and keeps every history/pending/cycle item', async t => {
-  const c = await fixture(t), before = c.queue.status(), pending = before.items.slice(5).map(item => item.id), history = before.items.slice(0, 5).map(item => item.id);
+  const c = await fixture(t); await c.queue.customCommand('echo', 'Play the correct song'); const before = c.queue.status(), pending = before.items.slice(5).map(item => item.id), history = before.items.slice(0, 5).map(item => item.id);
   assert.equal(observe(c.queue), true); await flush();
   const after = c.queue.status();
   assert.equal(after.id, before.id); assert.equal(after.index, 5); assert.equal(after.total, 11); assert.equal(after.currentTrack.title, target); assert.equal(after.currentTrack.adopted, true);
@@ -54,7 +54,7 @@ test('a manually corrected fifth song inserts as sixth and keeps every history/p
 });
 
 test('an adopted manual song advances naturally to the original sixth song', async t => {
-  const c = await fixture(t); assert.equal(observe(c.queue), true); await flush();
+  const c = await fixture(t); await c.queue.customCommand('echo', 'Play the correct song'); assert.equal(observe(c.queue), true); await flush();
   c.setLive(manual(299500)); await c.monitor.step();
   assert.equal(c.commands.at(-1).track.title, 'Song 6'); assert.equal(c.queue.status().index, 6);
 });
@@ -84,12 +84,12 @@ test('custom commands preserve the queue while only newly observed advancing aud
   assert.equal(c.custom.length, 1); assert.equal(observe(c.queue), true); assert.equal(c.queue.status().total, 11);
 });
 
-test('passive polling continues with backoff and can adopt after its fast polling phase', async t => {
+test('passive polling continues with backoff and clears for an outside song after its fast polling phase', async t => {
   const c = await fixture(t); c.setLive(wrong);
   await c.adoption.step(); await c.adoption.step();
   assert.ok(c.adoption.pending.some(item => !item.done && item.ms === 15000));
   c.setLive(manual(1000)); await c.adoption.step(); c.setLive(manual(2000)); await c.adoption.step();
-  assert.equal(c.queue.status().currentTrack.adopted, true); assert.equal(c.queue.status().total, 11);
+  assert.equal(c.queue.status(), null); assert.equal(c.commands.length, 1);
 });
 
 test('a weather command resumes monitoring an unchanged previously confirmed song without inserting it again', async t => {
@@ -123,4 +123,11 @@ test('a verified paused queue stays paused after a non-music command without an 
   c.setLive(current); await c.queue.customCommand('echo', 'What time is it?');
   assert.equal(observe(c.queue, current, current), true);
   assert.equal(c.queue.status().state, 'paused'); assert.equal(c.queue.status().total, 10); assert.equal(c.commands.length, 1);
+});
+
+
+test('a completed typed-command observation window cannot adopt a later voice request into the queue', async t => {
+  const c = await fixture(t); await c.queue.customCommand('echo', 'What is the weather?');
+  c.advance(31000); assert.equal(observe(c.queue), true); assert.equal(c.queue.status(), null);
+  assert.equal(c.commands.length, 1);
 });

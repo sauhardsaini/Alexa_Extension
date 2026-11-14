@@ -278,19 +278,19 @@ export class PlaylistQueue {
     try {
       const response = await pending;
       if (!this.valid(job, revision)) throw changed();
-      this.startManualRecovery(job, baseline, { allowFirst: true, resume });
+      this.startManualRecovery(job, baseline, { allowFirst: true, resume, fromCommand: true });
       return { ...response, queue: this.status() };
     } catch (error) {
       if (this.valid(job, revision)) {
-        this.startManualRecovery(job, baseline, { allowFirst: true, resume });
+        this.startManualRecovery(job, baseline, { allowFirst: true, resume, fromCommand: true });
         this.update(job, { message: 'The command was not confirmed. Your upcoming songs are kept; waiting for identifiable new playback, or choose Next.' });
       }
       throw error;
     }
   }
-  startManualRecovery(job, baseline, { allowFirst = false, resume = null, allowFailedPlayback = false } = {}) {
+  startManualRecovery(job, baseline, { allowFirst = false, resume = null, allowFailedPlayback = false, fromCommand = false } = {}) {
     const recovery = { revision: job.revision, baseline: playerKey(baseline), seeded: Boolean(playerKey(baseline)) || allowFirst,
-      candidate: null, position: null, readings: 0, watching: true, resume, allowFailedPlayback };
+      candidate: null, position: null, readings: 0, watching: true, resume, allowFailedPlayback, fromCommand, commandUntil: fromCommand ? this.clock() + 30000 : 0 };
     job.manualRecovery = recovery;
     job.manualTask = this.watchManualRecovery(job, recovery).catch(() => {});
   }
@@ -306,7 +306,34 @@ export class PlaylistQueue {
     }
     if (job.manualRecovery === recovery) recovery.watching = false;
   }
+  observeOutsidePlayback(deviceId, player) {
+    const job = this.current;
+    const ready = job?.state === 'ready' || job?.outsidePlayback?.previousState === 'ready';
+    const inactiveTail = job && !job.active && job.index + 1 < job.tracks.length;
+    if (!job || (!job.active && !inactiveTail) || (!inactiveTail && !ready && ((!job.matched && !job.outsidePlayback) || (!['playing', 'paused'].includes(job.state) && !job.outsidePlayback)))
+      || (job.deviceId && job.deviceId !== deviceId) || job.seekBusy || this.playback.status()?.active || (!inactiveTail && !ready && !this.ownsIntent(job))) return null;
+    if (inactiveTail && playerKey(player) === job.cancelledPlayback) { job.outsidePlayback = null; return null; }
+    if (!adoptablePlayer(player)) { if (job.outsidePlayback) job.outsidePlayback.key = null; return null; }
+    const track = job.tracks[job.index], progress = job.progress;
+    const song = comparePlayback(track, player, { candidateArtists: [track.artist] });
+    const service = compareMusicProvider(this.providerFor(job), player.providerName);
+    const changedMedia = progress?.mediaId && mediaIdentity(player.mediaId) && progress.mediaId !== mediaIdentity(player.mediaId);
+    if (!ready && song.verdict !== 'mismatch' && service.verdict !== 'mismatch' && !changedMedia) {
+      if (job.active && job.outsidePlayback) this.update(job, { matched: true, state: job.outsidePlayback.previousState, message: 'The original queue recording is still playing.' });
+      job.outsidePlayback = null; return null;
+    }
+    const key = playerKey(player), previous = job.outsidePlayback;
+    if (previous?.key === key && player.positionMs > previous.position) {
+      this.clear(job.id, { keepCurrent: false });
+      return 'cleared';
+    }
+    job.outsidePlayback = { key, position: player.positionMs, previousState: previous?.previousState || job.state };
+    if (job.active) this.update(job, { matched: false, state: 'needs_attention', message: 'Checking whether playback outside this queue has taken over…' });
+    return 'pending';
+  }
   observePlayer(deviceId, player) {
+    const outside = this.observeOutsidePlayback(deviceId, player);
+    if (outside) return outside === 'cleared';
     const job = this.current, recovery = job?.manualRecovery;
     if (!recovery || job.deviceId !== deviceId || job.state !== 'needs_attention' || !this.valid(job, recovery.revision)) return false;
     const identity = playerKey(player);
@@ -332,6 +359,10 @@ export class PlaylistQueue {
         state: paused ? 'paused' : 'playing', message: paused ? 'Your current song is still paused. The remaining queue is kept.' : 'Your current song is still playing. Continuing the same queue.' });
       this.captureIntent(job);
       if (paused) this.invalidate(job); else this.launch(job);
+      return true;
+    }
+    if ((!recovery.fromCommand || this.clock() > recovery.commandUntil) && identity !== recovery.baseline) {
+      this.clear(job.id, { keepCurrent: false });
       return true;
     }
     const adopted = snapshotTrack({ ...player, source: 'player', country: job.country }, job.country);
@@ -400,12 +431,13 @@ export class PlaylistQueue {
     this.update(job, {});
     return { queue: this.status() };
   }
-  clear(queueId = null) {
+  clear(queueId = null, { keepCurrent = true } = {}) {
     const job = this.current;
     if (queueId !== null && queueId !== job?.id) throw new AppError(409, 'QUEUE_CHANGED', 'A newer queue replaced this control.');
     const ready = job?.state === 'ready';
     this.cancel('Queue cleared. The current song may continue playing.');
-    if (job) { job.tracks = ready ? [] : job.tracks.slice(0, job.index + 1); job.cycleTracks = [...job.tracks]; this.update(job, { total: job.tracks.length }); }
+    if (!keepCurrent) this.current = null;
+    else if (job) { job.tracks = ready ? [] : job.tracks.slice(0, job.index + 1); job.cycleTracks = [...job.tracks]; this.update(job, { total: job.tracks.length }); }
     return { queue: this.status() };
   }
   captureIntent(job) {
@@ -423,7 +455,7 @@ export class PlaylistQueue {
   }
   update(job, changes) { Object.assign(job, changes, { updatedAt: Math.max(this.clock(), job.updatedAt + 1) }); }
   invalidate(job) {
-    ++job.revision; job.abort?.abort(); job.manualRecovery = null;
+    ++job.revision; job.abort?.abort(); job.manualRecovery = null; job.outsidePlayback = null;
     if (job.seekBusy) { job.matched = false; job.progress = null; }
     job.seekBusy = false;
   }
@@ -461,6 +493,7 @@ export class PlaylistQueue {
     if (requestId && requestId !== job?.id && requestId !== job?.playbackRequestId) return this.status();
     ++this.mutation;
     if (!job || !job.active) return this.status();
+    job.cancelledPlayback = job.manualRecovery?.baseline || job.outsidePlayback?.key || null;
     this.cancelOwned(job, 'Automatic playlist requests cancelled.');
     this.finish(job, 'cancelled', text(message, 500) ? message : 'Queue cancelled. The current song may continue playing.');
     return this.status();
@@ -638,7 +671,7 @@ export class PlaylistQueue {
         const verification = this.playback.status();
         if (verification?.state !== 'matched') {
           this.update(job, { state: 'needs_attention', matched: false, progress: null,
-            message: 'The Echo did not confirm this song. Play a song manually to keep the remaining queue, or choose Next.' });
+            message: 'The Echo did not confirm this song. Use a typed command to correct it, choose Next, or play independently on Alexa.' });
           let baseline = reservation.lastPlayer || null;
           if (!baseline) { try { baseline = (await this.bridge.freshPlayer(job.deviceId))?.player || null; } catch {} }
           if (!this.valid(job, revision)) return;
@@ -682,6 +715,9 @@ export class PlaylistQueue {
       let player;
       try { player = (await this.bridge.freshPlayer(job.deviceId))?.player; } catch { player = null; }
       if (!this.valid(job, revision)) return false;
+      const outside = this.observeOutsidePlayback(job.deviceId, player);
+      if (outside === 'cleared') return false;
+      if (outside === 'pending') continue;
       const actualProvider = providerIdentity(player?.providerName);
       const actualMedia = mediaIdentity(player?.mediaId);
       const provider = compareMusicProvider(this.providerFor(job), player?.providerName);

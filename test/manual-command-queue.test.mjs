@@ -102,15 +102,10 @@ test('typed correction inserts the observed song as sixth and Next retains the o
   assert.equal(f.songs.at(-1).track.title, 'Song 6'); assert.equal(f.songs.at(-1).providerId, 'apple-music');
 });
 
-test('a spoken correction observed through player refresh is adopted and auto-end continues the old tail', async t => {
-  const f = await fixture(t), before = await f.beginFailure();
+test('a spoken song observed through player refresh clears the old queue without sending a song command', async t => {
+  const f = await fixture(t); await f.beginFailure(); const songs = f.songs.length;
   f.setLive(manualSong()); await f.observe();
-  assert.equal(f.queue.status().index, 5); assert.equal(f.queue.status().total, 11); assert.equal(f.commands.length, 0);
-  await f.stepMonitor({ ...manualSong(), positionMs: 5000 });
-  await f.stepMonitor({ ...manualSong(), positionMs: 299500 });
-  await until(() => f.songs.length === 6);
-  assert.equal(f.songs.at(-1).track.title, 'Song 6');
-  assert.deepEqual(f.queue.status().items.slice(7).map(item => item.id), before.items.slice(6).map(item => item.id));
+  assert.equal(f.queue.status(), null); assert.equal(f.commands.length, 0); assert.equal(f.songs.length, songs);
 });
 
 test('nonmusic commands and unchanged failed playback preserve the queue without adding a duplicate', async t => {
@@ -159,7 +154,7 @@ test('a new queue during a pending manual command cannot be replaced by the old 
   f.queue.startLocal({ playlist: replacement, deviceId: DEVICE, providerId: 'apple-music', country: 'IN' }); await flush();
   const newQueue = f.queue.status(); assert.notEqual(newQueue.id, oldQueue.id);
   release.resolve(); await pending; await f.observe();
-  assert.equal(f.queue.status().id, newQueue.id); assert.deepEqual(f.queue.status().items.map(item => item.id), newQueue.items.map(item => item.id));
+  assert.equal(f.queue.status(), null); assert.notEqual(newQueue.id, oldQueue.id);
 });
 
 

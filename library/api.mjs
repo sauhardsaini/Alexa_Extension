@@ -167,6 +167,10 @@ export function createLibraryHandler({ bridge, catalog, appleMusic = null, artis
         return json(200, appleMusic.publicConfig());
       }
       if (req.method === 'GET' && url.pathname === '/api/search') return json(200, await catalog.search(url.searchParams.get('q'), url.searchParams.get('country') || bridge.status().settings.country));
+      if (req.method === 'GET' && url.pathname === '/api/echo-queue') {
+        if (typeof bridge.playerQueue !== 'function') throw new AppError(503, 'ALEXA_QUEUE_UNAVAILABLE', 'Alexa queue information is unavailable.');
+        return json(200, await bridge.playerQueue(url.searchParams.get('deviceId')));
+      }
       if (req.method === 'GET' && url.pathname === '/api/player') {
         const deviceId = url.searchParams.get('deviceId'), before = intentSnapshot();
         const result = await bridge.player(deviceId, { fresh: url.searchParams.get('fresh') === '1' });
@@ -256,9 +260,9 @@ export function createLibraryHandler({ bridge, catalog, appleMusic = null, artis
             if (playlist.country !== body.country) throw new AppError(409, 'COUNTRY_MISMATCH', 'Select the country saved with this playlist before playing it.');
             if (!playlist.origin || !directPlaylistSource(playlist.origin.source) || provider.kind !== 'music' || playlist.origin.source !== provider.id) throw new AppError(409, 'PLAYLIST_SERVICE_MISMATCH', 'Choose this playlist’s original streaming service to play it directly, or play the saved songs through the app queue.');
             const original = { source: playlist.origin.source, title: playlist.origin.playbackName || playlist.origin.name, personal: false };
-            queue?.cancel('Replaced by your direct playlist request.');
+            queue?.clear(null, { keepCurrent: false });
             const result = await (playback ? playback.nativePlaylist(body.deviceId, original) : bridge.playPlaylist(original, body.deviceId));
-            return json(202, { ...result, mode: 'native-playlist' });
+            return json(202, { ...result, mode: 'native-playlist', queue: queue?.status() || null });
           }
           if (action === 'play') {
             const playlist = store.get(id), context = queueContext(body); bridge.requireDevice(body.deviceId);
@@ -385,8 +389,9 @@ export function createLibraryHandler({ bridge, catalog, appleMusic = null, artis
           const before = intentSnapshot();
           const playlist = await service.playlist(body.playlistId);
           guardIntent(before);
-          queue?.cancel('Replaced by your native playlist selection.');
-          return json(202, await (playback ? playback.nativePlaylist(body.deviceId, playlist) : bridge.playPlaylist(playlist, body.deviceId)));
+          queue?.clear(null, { keepCurrent: false });
+          const result = await (playback ? playback.nativePlaylist(body.deviceId, playlist) : bridge.playPlaylist(playlist, body.deviceId));
+          return json(202, { ...result, queue: queue?.status() || null });
         }
         if (url.pathname === '/api/command') {
           const text = normalizeCustomCommand(body.text);

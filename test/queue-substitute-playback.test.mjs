@@ -84,7 +84,8 @@ test('paused, incomplete, unchanged-progress and cancelled observations cannot a
 
 test('a manual correction after substitute monitoring still inserts as current and preserves the original next song', async t => {
   const c = await fixture(t); acceptFallback(c); await flush();
-  c.setLive(manual(1000)); await c.monitor.step();
+  await c.queue.customCommand('echo', 'Play the correct song');
+  c.setLive(manual(1000));
   assert.equal(c.queue.status().state, 'needs_attention');
   c.queue.observePlayer('echo', manual(2000));
   assert.equal(c.queue.observePlayer('echo', manual(3000)), true); await flush();

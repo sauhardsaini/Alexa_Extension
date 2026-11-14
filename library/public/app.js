@@ -7,7 +7,7 @@
   const providerExploreUrls = Object.freeze({ 'amazon-music': 'https://music.amazon.in/', spotify: 'https://open.spotify.com/', jiosaavn: 'https://www.jiosaavn.com/', tunein: 'https://tunein.com/', deezer: 'https://www.deezer.com/', pandora: 'https://www.pandora.com/', iheartradio: 'https://www.iheart.com/', siriusxm: 'https://www.siriusxm.com/', tidal: 'https://tidal.com/', gaana: 'https://gaana.com/', hungama: 'https://www.hungama.com/' });
   function normalizeCountry(value) { const country = String(value || '').toUpperCase(); return country === 'UK' ? 'GB' : country; }
   function countryName(code) { const option = Array.from($('country-select').options).find(function (item) { return item.value === normalizeCountry(code); }); return option ? option.textContent : String(code || '').toUpperCase(); }
-  const state = { seekSongKey: '', seekSnapshot: null, seekObservedAt: null, seekEditing: false, seekEditKey: '', seekEditStart: null, seekDraft: null, seekRequested: null, seekBusy: false, seekChecking: false, seekUnverified: false, seekStale: false, seekError: '', seekRevision: 0, seekWriteId: 0, volume: null, volumeDeviceId: '', volumeDraft: null, volumeRequested: null, volumeEditing: false, volumeEditStart: null, volumeBusy: false, volumeStale: false, volumeError: '', volumeRevision: 0, volumeWriteId: 0, cataloguePlatform: 'apple-music', cataloguePlatformSaved: false, spotify: { configured: false, connected: false, needsSetup: true }, youtube: { configured: false, connected: false, needsSetup: true }, catalogueSource: null, oauthPopups: { spotify: null, youtube: null }, oauthBusy: { spotify: false, youtube: false }, oauthSetupBusy: { spotify: false, youtube: false }, view: 'search', playlists: [], playlistsSource: 'local', playlistSourceSaved: false, localPlaylist: null, localPlaylistGeneration: 0, localMutationBusy: false, playlistDialog: null, playlistDialogGeneration: 0, playlistDialogBusy: false, playlistImport: null, playlistImportGeneration: 0, playlistImportSavePending: null, sidebarOpen: false, sidebarTab: 'commands', sidebarModal: false, sidebarPreviousFocus: null, queueOpen: false, queueItemsFingerprint: '', playerActionsKey: '', playlistsLoading: false, playlistGeneration: 0, playlistAccountsFingerprint: null, playlistBusy: false, playlistPreview: null, playlistPreviewGeneration: 0, queue: null, queueBusy: false, queueModeBusy: false, queueModeWriteId: 0, shuffle: false, repeatAll: false, queueSubmissionPromise: null, queueEpoch: 0, queueObserved: new Set(), queueDismissed: new Set(), queueDismissTimers: new Map(), commandsOpen: false, commandsModal: false, commands: [], commandsFingerprint: '', commandsTimer: null, commandsController: null, commandsGeneration: 0, commandsPreviousFocus: null, customCommandBusy: false, providers: fallbackProviders.slice(), providerId: 'apple-music', requestMode: 'standard', providerSaved: false, providersLoading: false, providersPromise: null, providersDiscovery: 'unavailable', providersMessage: '', providerChanging: false, providerChangeGeneration: 0, apple: { configured: false, connected: false, needsSetup: true, message: 'MusicKit app setup is needed before searching Apple Music.' }, appleKit: null, appleTokenExpiresAt: 0, applePreparing: false, applePreparePromise: null, applePrepareError: '', appleBusy: false, appleSetupBusy: false, country: 'IN', resultsCountry: null, resultsSource: null, musicKitScriptPromise: null, connection: { state: 'disconnected' }, settings: {}, devices: [], tracks: [], deviceId: '', player: null, playerStale: false, pendingTrack: null, pendingSelection: null, playSubmissionPromise: null, playback: null, playbackEpoch: 0, playbackNotified: new Set(), playbackObserved: new Set(), playbackDismissed: new Set(), playbackDismissTimers: new Map(), cancelBusy: false, cancelPromise: null, controlBusy: false, deviceChanging: false, deviceChangeGeneration: 0, initialized: false, statusBusy: false, playerBusy: false, searching: false, searchController: null, searchGeneration: 0, searchTimer: null, searchComposing: false, searchRequestKey: '', searchCompletedKey: '', playlistSourceCache: new Map(), playlistSync: null, playlistSyncGeneration: 0, playlistArtworkCache: new Map(), playlistArtworkRevision: 0, playlistArtworkActive: 0, playlistArtworkWaiters: [], statusTimer: null, toastTimer: null };
+  const state = { seekSongKey: '', seekSnapshot: null, seekObservedAt: null, seekEditing: false, seekEditKey: '', seekEditStart: null, seekDraft: null, seekRequested: null, seekBusy: false, seekChecking: false, seekUnverified: false, seekStale: false, seekError: '', seekRevision: 0, seekWriteId: 0, volume: null, volumeDeviceId: '', volumeDraft: null, volumeRequested: null, volumeEditing: false, volumeEditStart: null, volumeBusy: false, volumeStale: false, volumeError: '', volumeRevision: 0, volumeWriteId: 0, cataloguePlatform: 'apple-music', cataloguePlatformSaved: false, spotify: { configured: false, connected: false, needsSetup: true }, youtube: { configured: false, connected: false, needsSetup: true }, catalogueSource: null, oauthPopups: { spotify: null, youtube: null }, oauthBusy: { spotify: false, youtube: false }, oauthSetupBusy: { spotify: false, youtube: false }, view: 'search', playlists: [], playlistsSource: 'local', playlistSourceSaved: false, localPlaylist: null, localPlaylistGeneration: 0, localMutationBusy: false, playlistDialog: null, playlistDialogGeneration: 0, playlistDialogBusy: false, playlistImport: null, playlistImportGeneration: 0, playlistImportSavePending: null, sidebarOpen: false, sidebarTab: 'commands', sidebarModal: false, sidebarPreviousFocus: null, queueOpen: false, queueItemsFingerprint: '', echoQueue: null, echoQueueKey: '', echoQueueBusy: false, echoQueueTimer: null, echoQueueNextAt: 0, playerActionsKey: '', playlistsLoading: false, playlistGeneration: 0, playlistAccountsFingerprint: null, playlistBusy: false, playlistPreview: null, playlistPreviewGeneration: 0, queue: null, queueBusy: false, queueModeBusy: false, queueModeWriteId: 0, shuffle: false, repeatAll: false, queueSubmissionPromise: null, queueEpoch: 0, queueObserved: new Set(), queueDismissed: new Set(), queueDismissTimers: new Map(), commandsOpen: false, commandsModal: false, commands: [], commandsFingerprint: '', commandsTimer: null, commandsController: null, commandsGeneration: 0, commandsPreviousFocus: null, customCommandBusy: false, providers: fallbackProviders.slice(), providerId: 'apple-music', requestMode: 'standard', providerSaved: false, providersLoading: false, providersPromise: null, providersDiscovery: 'unavailable', providersMessage: '', providerChanging: false, providerChangeGeneration: 0, apple: { configured: false, connected: false, needsSetup: true, message: 'MusicKit app setup is needed before searching Apple Music.' }, appleKit: null, appleTokenExpiresAt: 0, applePreparing: false, applePreparePromise: null, applePrepareError: '', appleBusy: false, appleSetupBusy: false, country: 'IN', resultsCountry: null, resultsSource: null, musicKitScriptPromise: null, connection: { state: 'disconnected' }, settings: {}, devices: [], tracks: [], deviceId: '', player: null, playerStale: false, pendingTrack: null, pendingSelection: null, playSubmissionPromise: null, playback: null, playbackEpoch: 0, playbackNotified: new Set(), playbackObserved: new Set(), playbackDismissed: new Set(), playbackDismissTimers: new Map(), cancelBusy: false, cancelPromise: null, controlBusy: false, deviceChanging: false, deviceChangeGeneration: 0, initialized: false, statusBusy: false, playerBusy: false, searching: false, searchController: null, searchGeneration: 0, searchTimer: null, searchComposing: false, searchRequestKey: '', searchCompletedKey: '', playlistSourceCache: new Map(), playlistSync: null, playlistSyncGeneration: 0, playlistArtworkCache: new Map(), playlistArtworkRevision: 0, playlistArtworkActive: 0, playlistArtworkWaiters: [], statusTimer: null, toastTimer: null };
   try { state.deviceId = localStorage.getItem('echo-library-device') || ''; const savedCountry = normalizeCountry(localStorage.getItem('echo-library-country')); if (countries.includes(savedCountry)) state.country = savedCountry; } catch (_) {}
   try { const savedProvider = localStorage.getItem('echo-library-provider'); if (typeof savedProvider === 'string' && savedProvider.length > 0 && savedProvider.length <= 150 && !/[\u0000-\u001f\u007f]/u.test(savedProvider)) { state.providerId = savedProvider; state.providerSaved = true; } } catch (_) {}
   try { const platform = localStorage.getItem('echo-library-catalogue-platform'); if (['apple-music', 'spotify', 'youtube-music'].includes(platform)) { state.cataloguePlatform = platform; state.cataloguePlatformSaved = true; } } catch (_) {}
@@ -745,7 +745,7 @@
   }
   function createMacMediaBridge(options) {
     const session = options.session;
-    let enabled = false, audio = null, metadataKey = '', generation = 0;
+    let enabled = false, blocked = false, audio = null, metadataKey = '', generation = 0;
     const actions = { play: 'resume', pause: 'pause', nexttrack: 'next', previoustrack: 'previous' };
     function current() {
       const snapshot = options.snapshot(), player = snapshot.player;
@@ -777,7 +777,7 @@
       else if (audio && audio.paused) audio.play().catch(function () { options.notice('Disable and re-enable Mac media controls to reconnect Now Playing.'); });
     }
     async function disable() {
-      ++generation; enabled = false;
+      ++generation; enabled = false; blocked = false;
       Object.keys(actions).forEach(function (action) { try { session.setActionHandler(action, null); } catch (_) {} });
       clear();
       if (audio) { audio.pause(); audio.removeAttribute('src'); audio.load(); }
@@ -786,7 +786,7 @@
     }
     async function enable() {
       if (enabled) { update(); return; }
-      const revision = ++generation;
+      const revision = ++generation; blocked = false;
       try {
         // A finite PCM file requests persistent media focus; MediaStreams
         // are treated as transient playback by Chromium. All samples are zero.
@@ -801,9 +801,9 @@
           }); } catch (_) {}
         });
         enabled = true; options.changed(true); update();
-      } catch (_) { await disable(); options.notice('Mac media controls could not start. Check browser playback permissions and try again.'); }
+      } catch (error) { await disable(); blocked = error && error.name === 'NotAllowedError'; options.notice(blocked ? 'Your browser needs a click to activate Mac media controls. Click Enable or anywhere in Echo Library.' : 'Mac media controls could not start. Check browser playback permissions and try again.'); }
     }
-    return { enable: enable, disable: disable, update: update, get enabled() { return enabled; } };
+    return { enable: enable, disable: disable, update: update, get enabled() { return enabled; }, get blocked() { return blocked; } };
   }
   function initMacMedia() {
     const button = $('mac-media-toggle'), note = $('mac-media-note');
@@ -814,10 +814,30 @@
         busy: state.controlBusy || state.customCommandBusy || state.queueBusy || state.queueModeBusy || state.deviceChanging || state.providerChanging }; },
       control: control,
       notice: function (message) { note.textContent = message; },
-      changed: function (enabled) { button.textContent = enabled ? 'Disable Mac media controls' : 'Enable Mac media controls'; button.setAttribute('aria-pressed', String(enabled)); note.textContent = enabled ? 'Keep this tab open. Now Playing uses a silent local session; keys control your Echo. Other media apps can take priority.' : 'Optional: show Echo playback in Mac Now Playing using a silent local session.'; }
+      changed: function (enabled) { button.textContent = enabled ? 'Disable Mac media controls' : 'Enable Mac media controls'; button.setAttribute('aria-pressed', String(enabled)); note.textContent = enabled ? 'Keep this tab open. Now Playing uses a silent local session; keys control your Echo. Other media apps can take priority.' : 'Show Echo playback in Mac Now Playing using a silent local session. Your choice is remembered.'; }
     });
-    button.addEventListener('click', async function () { button.disabled = true; try { if (state.macMedia.enabled) await state.macMedia.disable(); else await state.macMedia.enable(); } finally { button.disabled = false; } });
-    window.addEventListener('pagehide', function () { state.macMedia.disable(); });
+    let wanted = true, starting = false, closed = false;
+    try { wanted = localStorage.getItem('echo-library-mac-media') !== 'false'; } catch (_) {}
+    function savePreference(value) { wanted = value; try { localStorage.setItem('echo-library-mac-media', String(value)); } catch (_) {} }
+    async function start() {
+      if (!wanted || starting || closed) return;
+      starting = true; button.disabled = true;
+      try { await state.macMedia.enable(); } finally { starting = false; button.disabled = false; }
+    }
+    button.addEventListener('click', async function () {
+      if (starting || closed) return;
+      if (state.macMedia.enabled) { savePreference(false); await state.macMedia.disable(); }
+      else { savePreference(true); await start(); }
+    });
+    function retryAfterInteraction(event) {
+      if (event && (event.repeat || event.metaKey || event.ctrlKey || event.altKey)) return;
+      if (wanted && state.macMedia.blocked) start();
+    }
+    document.addEventListener('click', retryAfterInteraction);
+    document.addEventListener('keydown', retryAfterInteraction);
+    window.addEventListener('pagehide', function () { closed = true; state.macMedia.disable(); });
+    window.addEventListener('pageshow', function (event) { if (event.persisted) { closed = false; start(); } });
+    if (wanted) start();
   }
   function renderPlayer() {
     const player = state.player; const available = canPlay();
@@ -839,6 +859,7 @@
     }
     renderVolume(); renderSeek(); renderPlayerSongActions(); renderQueueModes();
     if (state.macMedia) state.macMedia.update();
+    renderEchoQueue();
   }
   async function refreshPlayer() {
     if (!canPlay() || state.playerBusy || state.deviceChanging || (document.hidden && !(state.macMedia && state.macMedia.enabled))) return;
@@ -1167,8 +1188,8 @@
   }
   async function playLocalPlaylistNative() {
     const playlist = state.localPlaylist; if (!nativeLocalPlaylist(playlist) || !canPlay() || songHandoffBusy() || normalizeCountry(playlist.country) !== $('country-select').value) return;
-    const payload = { deviceId: state.deviceId, providerId: state.providerId, country: $('country-select').value }; state.playlistBusy = true; ++state.playbackEpoch; ++state.queueEpoch; updatePlayButtons();
-    try { const result = await api('/api/local-playlists/' + encodeURIComponent(playlist.id) + '/play-native', { method: 'POST', body: JSON.stringify(payload) }); toast(result.message || 'Original playlist request sent to your Echo.'); scheduleStatus(500); }
+    const payload = { deviceId: state.deviceId, providerId: state.providerId, country: $('country-select').value }; state.playlistBusy = true; ++state.playbackEpoch; ++state.queueEpoch; const queueEpoch = state.queueEpoch, targetDeviceId = state.deviceId; updatePlayButtons();
+    try { const result = await api('/api/local-playlists/' + encodeURIComponent(playlist.id) + '/play-native', { method: 'POST', body: JSON.stringify(payload) }); if (queueEpoch === state.queueEpoch && targetDeviceId === state.deviceId && Object.prototype.hasOwnProperty.call(result, 'queue')) { ++state.queueEpoch; applyQueue(result.queue, { fromMutation: true }); } toast(result.message || 'Original playlist request sent to your Echo.'); scheduleStatus(500); }
     catch (error) { toast(error.message, true); }
     finally { state.playlistBusy = false; updatePlayButtons(); }
   }
@@ -1561,8 +1582,8 @@
   }
   async function playNativePlaylist(playlist) {
     if (!canPlay() || songHandoffBusy() || !['apple-music', 'spotify'].includes(playlist.source) || !playlistStillListed(playlist)) return;
-    const source = playlist.source, deviceId = state.deviceId; state.playlistBusy = true; ++state.playbackEpoch; ++state.queueEpoch; updatePlayButtons();
-    try { const result = await api('/api/play-playlist', { method: 'POST', body: JSON.stringify({ source: source, playlistId: playlist.id, deviceId: deviceId }) }); toast(result.message || 'Playlist request sent to your Echo.'); scheduleStatus(500); setTimeout(refreshPlayer, 1000); }
+    const source = playlist.source, deviceId = state.deviceId; state.playlistBusy = true; ++state.playbackEpoch; ++state.queueEpoch; const queueEpoch = state.queueEpoch, targetDeviceId = state.deviceId; updatePlayButtons();
+    try { const result = await api('/api/play-playlist', { method: 'POST', body: JSON.stringify({ source: source, playlistId: playlist.id, deviceId: deviceId }) }); if (queueEpoch === state.queueEpoch && targetDeviceId === state.deviceId && Object.prototype.hasOwnProperty.call(result, 'queue')) { ++state.queueEpoch; applyQueue(result.queue, { fromMutation: true }); } toast(result.message || 'Playlist request sent to your Echo.'); scheduleStatus(500); setTimeout(refreshPlayer, 1000); }
     catch (error) { toast(error.message, true); }
     finally { state.playlistBusy = false; updatePlayButtons(); }
   }
@@ -1660,19 +1681,20 @@
     $('queue-progress').hidden = !state.queueOpen;
     $('queue-title').textContent = queue ? queue.title || 'Your song queue' : 'Your song queue';
     const mismatch = queueReady() && (normalizeCountry(queue.country) !== $('country-select').value || queue.providerId !== state.providerId);
-    const track = queue && queue.currentTrack; $('queue-track').textContent = track ? 'Current · ' + track.title + (track.artist ? ' · ' + track.artist : '') : '';
+    const track = queue && queue.currentTrack; $('queue-track').textContent = track ? (queue.active ? (['playing', 'paused'].includes(queue.state) ? 'Current · ' : 'Requested · ') : 'Last queued · ') + track.title + (track.artist ? ' · ' + track.artist : '') : '';
     $('queue-message').textContent = queue ? queue.message || ({ ready: 'Ready when you are. Select an Echo, then choose Start.', preparing: 'Preparing your playlist…', playing: 'Playing songs on your Echo.', paused: 'Queue paused.', needs_attention: 'The queue needs your attention.', completed: 'Queue completed.', cancelled: 'Automatic queue playback stopped.', error: 'The queue could not continue.' }[queue.state] || '') : 'Add a song from search or a playlist. Music already playing stays on your Echo.';
     if (queue && queue.warning && $('queue-message').textContent.indexOf(queue.warning) === -1) $('queue-message').textContent = queue.warning + ' ' + $('queue-message').textContent;
     if (mismatch) $('queue-message').textContent = 'Select ' + countryName(queue.country) + ' and ' + (queue.providerName || providerName(queue.providerId)) + ' to start this saved queue.';
     $('queue-provider').textContent = queue ? (queue.providerName ? 'Next songs: ' + queue.providerName + '. ' : '') + (queue.country ? 'Catalogue: ' + countryName(queue.country) + '. ' : '') + (queue.currentProviderName ? 'Current song service: ' + queue.currentProviderName + '.' : 'Reported playback appears in the player.') : '';
     const paused = queue && ['paused', 'needs_attention'].includes(queue.state), ready = queueReady(); $('queue-toggle').textContent = ready ? 'Start' : paused ? 'Resume' : 'Pause'; $('queue-toggle').dataset.action = ready ? 'start' : paused ? 'resume' : 'pause';
     ['queue-toggle', 'queue-next', 'queue-cancel'].forEach(function (id) { $(id).hidden = !queue || !queue.active; $(id).disabled = state.queueBusy || state.queueModeBusy || (state.customCommandBusy && id !== 'queue-cancel') || state.pendingTrack !== null || state.deviceChanging || state.providerChanging; });
+    $('queue-cancel').hidden = !queue || (!queue.active && !items.some(function (item) { return item.state === 'pending'; }));
     $('queue-toggle').disabled = $('queue-toggle').disabled || (ready && (!canPlay() || selectedProvider().kind === 'radio' || mismatch)); $('queue-next').hidden = !queue || !queue.active || ready;
-    const fingerprint = JSON.stringify([queue && queue.id, items]);
+    const fingerprint = JSON.stringify([queue && queue.id, queue && queue.active, queue && queue.state, items]);
     if (fingerprint !== state.queueItemsFingerprint) {
       state.queueItemsFingerprint = fingerprint; const list = $('queue-items'); list.replaceChildren();
       items.filter(function (item) { return item.state !== 'played'; }).forEach(function (item) {
-        const row = element('li', 'queue-item'); const copy = element('div', 'song-list-copy'); copy.appendChild(element('span', 'song-list-state', item.state === 'current' ? 'CURRENT' : 'UP NEXT')); copy.appendChild(element('strong', '', item.title)); copy.appendChild(element('span', '', item.artist || 'Artist not supplied')); row.appendChild(copy);
+        const row = element('li', 'queue-item'); const copy = element('div', 'song-list-copy'); copy.appendChild(element('span', 'song-list-state', item.state === 'current' ? (queue.active ? (['playing', 'paused'].includes(queue.state) ? 'CURRENT' : 'REQUESTED') : 'LAST QUEUED') : 'UP NEXT')); copy.appendChild(element('strong', '', item.title)); copy.appendChild(element('span', '', item.artist || 'Artist not supplied')); row.appendChild(copy);
         const queueId = queue.id; const current = function () { return state.queue && state.queue.id === queueId && (state.queue.items || []).some(function (entry) { return entry.id === item.id; }); };
         const actions = element('div', 'song-row-actions'); actions.appendChild(songMenu(item, function () { return { source: 'queue', queueId: queueId, itemId: item.id, country: queue.country }; }, current));
         if (item.state === 'pending') {
@@ -1682,10 +1704,48 @@
       });
       if (!items.some(function (item) { return item.state !== 'played'; })) list.appendChild(element('li', 'queue-empty', 'Your queue is empty.'));
     }
-    document.querySelectorAll('[data-queue-item-action]').forEach(function (button) { button.disabled = state.queueBusy || songHandoffBusy(); }); renderSongActionReadiness(); renderQueueModes();
+    document.querySelectorAll('[data-queue-item-action]').forEach(function (button) { button.disabled = state.queueBusy || songHandoffBusy(); }); renderSongActionReadiness(); renderQueueModes(); renderEchoQueue();
+  }
+  function hasAppQueue() {
+    return !!(state.queue && (state.queue.active || (state.queue.items || []).some(function (item) { return item.state === 'pending'; })));
+  }
+  function echoQueueContext() {
+    const player = state.player;
+    return JSON.stringify([state.deviceId, player && player.title, player && player.artist, player && player.providerName, player && player.mediaId]);
+  }
+  function renderEchoQueue() {
+    const appQueue = hasAppQueue();
+    ['app-queue-summary', 'app-queue-controls', 'app-queue-clear-note', 'queue-items'].forEach(function (id) { $(id).hidden = !appQueue; });
+    $('echo-native-queue').hidden = appQueue;
+    clearTimeout(state.echoQueueTimer); state.echoQueueTimer = null;
+    if (appQueue) return;
+    const player = !state.playerStale && state.player && state.player.deviceId === state.deviceId ? state.player : null;
+    $('echo-native-current').textContent = player && player.title ? (['PLAYING', 'PAUSED'].includes(player.state) ? 'Current · ' : 'Last reported · ') + player.title + (player.artist ? ' · ' + player.artist : '') : 'Current song details have not been reported.';
+    const key = echoQueueContext(), result = state.echoQueueKey === key ? state.echoQueue : null;
+    $('echo-native-message').textContent = !canPlay() ? 'Connect an Echo to see its reported queue.' : state.echoQueueBusy ? 'Checking Alexa’s queue…' : result ? result.message : 'Checking which upcoming songs Alexa makes available…';
+    $('echo-native-refresh').disabled = !canPlay() || state.echoQueueBusy;
+    const list = $('echo-native-items'); list.replaceChildren();
+    (result && Array.isArray(result.items) ? result.items : []).forEach(function (item) {
+      const row = element('li', 'queue-item'), copy = element('div', 'song-list-copy');
+      copy.appendChild(element('span', 'song-list-state', item.state === 'current' ? 'CURRENT' : item.state === 'pending' ? 'UP NEXT' : 'REPORTED BY ALEXA'));
+      copy.appendChild(element('strong', '', item.title)); copy.appendChild(element('span', '', item.artist || 'Artist not reported')); row.appendChild(copy); list.appendChild(row);
+    });
+    if (state.queueOpen && canPlay() && !document.hidden && !state.echoQueueBusy)
+      state.echoQueueTimer = setTimeout(refreshEchoQueue, state.echoQueueKey === key ? Math.max(0, state.echoQueueNextAt - Date.now()) : 0);
+  }
+  async function refreshEchoQueue() {
+    if (hasAppQueue() || !state.queueOpen || !canPlay() || document.hidden || state.echoQueueBusy) return;
+    const key = echoQueueContext(), deviceId = state.deviceId, epoch = state.queueEpoch;
+    state.echoQueueBusy = true; renderEchoQueue();
+    try {
+      const result = await api('/api/echo-queue?deviceId=' + encodeURIComponent(deviceId));
+      if (key === echoQueueContext() && epoch === state.queueEpoch && !hasAppQueue()) { state.echoQueueKey = key; state.echoQueue = result; state.echoQueueNextAt = Date.now() + 20000; }
+    } catch (_) {
+      if (key === echoQueueContext() && epoch === state.queueEpoch && !hasAppQueue()) { state.echoQueueKey = key; state.echoQueue = { items: [], message: 'Alexa’s upcoming songs could not be retrieved. Current playback is unaffected. You can try Refresh.' }; state.echoQueueNextAt = Date.now() + 20000; }
+    } finally { state.echoQueueBusy = false; renderEchoQueue(); }
   }
   async function queueControl(action) {
-    if (!activeQueue() || state.queueBusy || state.queueModeBusy || (state.customCommandBusy && action !== 'clear') || state.pendingTrack !== null || state.deviceChanging || state.providerChanging) return;
+    if ((action === 'clear' ? !state.queue : !activeQueue()) || state.queueBusy || state.queueModeBusy || (state.customCommandBusy && action !== 'clear') || state.pendingTrack !== null || state.deviceChanging || state.providerChanging) return;
     if (action === 'start' && (!canPlay() || selectedProvider().kind === 'radio' || !queueReady() || normalizeCountry(state.queue.country) !== $('country-select').value || state.queue.providerId !== state.providerId)) return;
     const requestId = state.queue.id; const payload = { action: action, requestId: requestId };
     if (action === 'start') Object.assign(payload, { deviceId: state.deviceId, providerId: state.providerId, country: $('country-select').value });
@@ -1869,6 +1929,7 @@
   $('search-tab').addEventListener('click', function () { setBrowseView('search'); }); $('playlists-tab').addEventListener('click', function () { setBrowseView('playlists'); });
   $('playlist-source').addEventListener('change', function () { state.playlistsSource = $('playlist-source').value; state.playlistSourceSaved = true; try { localStorage.setItem('echo-library-playlist-source', state.playlistsSource); } catch (_) {} ++state.playlistPreviewGeneration; state.playlistPreview = null; renderPlaylistPreview(); if (!['all', 'local'].includes(state.playlistsSource)) { ++state.localPlaylistGeneration; state.localPlaylist = null; renderLocalPlaylist(); } loadPlaylists(); }); $('playlists-refresh').addEventListener('click', loadPlaylists);
   $('playlist-preview-close').addEventListener('click', function () { ++state.playlistPreviewGeneration; state.playlistPreview = null; renderPlaylistPreview(); }); $('playlist-queue-form').addEventListener('submit', startPlaylistQueue);
+  $('echo-native-refresh').addEventListener('click', refreshEchoQueue);
   $('queue-toggle').addEventListener('click', function () { queueControl($('queue-toggle').dataset.action); }); $('queue-next').addEventListener('click', function () { queueControl('next'); }); $('queue-cancel').addEventListener('click', function () { queueControl('clear'); });
   $('player-queue-button').addEventListener('click', function () { toggleQueue(); });
   $('new-playlist-button').addEventListener('click', function () { openPlaylistDialog(null); });
