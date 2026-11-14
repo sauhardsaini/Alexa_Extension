@@ -127,8 +127,8 @@ export class PlaylistQueue {
     const track = job.state === 'ready' ? null : job.tracks[index];
     const items = job.tracks.map((item, at) => ({ id: item.id, title: item.title, artist: item.artist, album: item.album || '', ...(normalizeReleaseYear(item.releaseYear) !== null ? { releaseYear: item.releaseYear } : {}), artwork: item.artwork || '', source: item.source || 'youtube-music',
       state: job.state === 'ready' ? 'pending' : at < index ? 'played' : at === index ? 'current' : 'pending' }));
-    return { id, state, active, title, index, total, currentTrack: track ? { id: track.id, title: track.title, artist: track.artist, source: track.source || 'youtube-music', ...(normalizeReleaseYear(track.releaseYear) !== null ? { releaseYear: track.releaseYear } : {}), adopted: Boolean(track.adopted) } : null, items,
-      currentProviderName: track?.adoptedProviderName || null,
+    return { id, state, active, title, index, total, currentTrack: track ? { id: track.id, title: track.title, artist: track.artist, source: track.source || 'youtube-music', ...(normalizeReleaseYear(track.releaseYear) !== null ? { releaseYear: track.releaseYear } : {}), adopted: Boolean(track.adopted), ...(track.fallbackWarning ? { requestedTitle: track.requestedTrack.title, fallback: true } : {}) } : null, items,
+      currentProviderName: track?.adoptedProviderName || null, warning: track?.fallbackWarning || null,
       manualRecovery: Boolean(job.manualRecovery), message, providerId, providerName, deviceId, country, createdAt, updatedAt, playbackRequestId, seeking: Boolean(job.seekBusy), shuffle: Boolean(job.shuffle), repeatAll: Boolean(job.repeatAll) };
   }
   providerFor(job) { return job.tracks[job.index]?.adopted ? 'alexa-default' : job.providerId; }
@@ -288,9 +288,9 @@ export class PlaylistQueue {
       throw error;
     }
   }
-  startManualRecovery(job, baseline, { allowFirst = false, resume = null } = {}) {
+  startManualRecovery(job, baseline, { allowFirst = false, resume = null, allowFailedPlayback = false } = {}) {
     const recovery = { revision: job.revision, baseline: playerKey(baseline), seeded: Boolean(playerKey(baseline)) || allowFirst,
-      candidate: null, position: null, readings: 0, watching: true, resume };
+      candidate: null, position: null, readings: 0, watching: true, resume, allowFailedPlayback };
     job.manualRecovery = recovery;
     job.manualTask = this.watchManualRecovery(job, recovery).catch(() => {});
   }
@@ -316,7 +316,7 @@ export class PlaylistQueue {
     }
     const restoreCurrent = identity === recovery.baseline && recovery.resume?.trackId === job.tracks[job.index]?.id;
     const verifiedPaused = restoreCurrent && recovery.resume.state === 'paused' && player?.state === 'PAUSED' && adoptablePlayer({ ...player, state: 'PLAYING' });
-    if ((!adoptablePlayer(player) && !verifiedPaused) || (identity === recovery.baseline && !restoreCurrent)) {
+    if ((!adoptablePlayer(player) && !verifiedPaused) || (identity === recovery.baseline && !restoreCurrent && !recovery.allowFailedPlayback)) {
       recovery.candidate = null; recovery.readings = 0; recovery.position = null; return false;
     }
     const same = identity === recovery.candidate;
@@ -337,6 +337,20 @@ export class PlaylistQueue {
     const adopted = snapshotTrack({ ...player, source: 'player', country: job.country }, job.country);
     adopted.adopted = true; adopted.adoptedProviderName = player.providerName.trim();
     const prior = job.tracks[job.index], at = job.index + 1;
+    if (identity === recovery.baseline && recovery.allowFailedPlayback) {
+      // Occupy only this runtime slot. The canonical repeat cycle and saved
+      // playlist retain the requested song, and every pending item keeps its ID.
+      adopted.id = prior.id;
+      adopted.requestedTrack = prior.requestedTrack || prior;
+      adopted.fallbackWarning = `Warning: Could not play “${adopted.requestedTrack.title}”. Alexa is playing “${adopted.title}” by ${adopted.artist} instead. The queue will continue after this song.`;
+      job.tracks[job.index] = adopted;
+      ++this.mutation;
+      this.update(job, { matched: true, playbackRequestId: null, verifiedProvider: providerIdentity(player.providerName),
+        progress: { position: player.positionMs, duration: player.durationMs, mediaId: mediaIdentity(player.mediaId), actualProvider: providerIdentity(player.providerName), progressed: true, nearEnd: player.durationMs - player.positionMs <= 5000, unknown: 0, stalled: 0 },
+        state: 'playing', message: adopted.fallbackWarning });
+      this.captureIntent(job); this.launch(job);
+      return true;
+    }
     job.tracks.splice(at, 0, adopted);
     const cycleAt = job.cycleTracks.findIndex(track => track.id === prior.id);
     job.cycleTracks.splice(cycleAt < 0 ? job.cycleTracks.length : cycleAt + 1, 0, adopted);
@@ -609,6 +623,7 @@ export class PlaylistQueue {
   }
   async run(job, revision) {
     while (this.valid(job, revision)) {
+      if (!job.matched && job.tracks[job.index]?.requestedTrack) job.tracks[job.index] = job.tracks[job.index].requestedTrack;
       const track = job.tracks[job.index];
       if (!job.matched) {
         if (track.adopted) { delete track.adopted; delete track.adoptedProviderName; job.verifiedProvider = null; }
@@ -627,7 +642,7 @@ export class PlaylistQueue {
           let baseline = reservation.lastPlayer || null;
           if (!baseline) { try { baseline = (await this.bridge.freshPlayer(job.deviceId))?.player || null; } catch {} }
           if (!this.valid(job, revision)) return;
-          this.startManualRecovery(job, baseline);
+          this.startManualRecovery(job, baseline, { allowFailedPlayback: verification?.state === 'unmatched' && (job.requestMode || 'standard') === 'standard' });
           return;
         }
         // Keep verified individual credits in this queue's private snapshot so
@@ -650,7 +665,14 @@ export class PlaylistQueue {
       this.update(job, { index: job.index + 1, matched: false, progress: null });
     }
   }
-  attention(job, message) { this.update(job, { state: 'needs_attention', matched: false, progress: null, message }); return false; }
+  attention(job, message) {
+    const track = job.tracks[job.index];
+    const baseline = track?.fallbackWarning ? { ...track, providerName: track.adoptedProviderName,
+      mediaId: job.progress?.mediaId, durationMs: job.progress?.duration || track.durationMs, positionMs: job.progress?.position } : null;
+    this.update(job, { state: 'needs_attention', matched: false, progress: null, message });
+    if (baseline) this.startManualRecovery(job, baseline);
+    return false;
+  }
   async monitor(job, revision, track) {
     const progress = job.progress ||= { position: null, duration: null, mediaId: null, actualProvider: job.verifiedProvider || null, progressed: false, nearEnd: false, unknown: 0, stalled: 0 };
     while (this.valid(job, revision)) {

@@ -1095,11 +1095,26 @@
     catch (error) { toast(error.message, true); }
     finally { state.playlistBusy = false; updatePlayButtons(); }
   }
+  function confirmInApp(message, confirmLabel) {
+    const dialog = $('app-confirm-dialog');
+    if (dialog.open) return Promise.resolve(false);
+    $('app-confirm-message').textContent = message;
+    $('app-confirm-accept').textContent = confirmLabel || 'Confirm';
+    dialog.returnValue = '';
+    return new Promise(function (resolve) {
+      dialog.onclose = function () { dialog.onclose = null; resolve(dialog.returnValue === 'confirm'); };
+      dialog.showModal();
+    });
+  }
   async function deleteLocalPlaylist() {
-    const playlist = state.localPlaylist; if (!playlist || state.localMutationBusy || !window.confirm('Delete “' + (playlist.name || playlist.title) + '” from this computer?')) return;
+    const playlist = state.localPlaylist; if (!playlist || state.localMutationBusy) return;
     state.localMutationBusy = true; renderLocalReadiness();
-    try { await api('/api/local-playlists/' + encodeURIComponent(playlist.id) + '/delete', { method: 'POST', body: '{}' }); if (state.localPlaylist && state.localPlaylist.id === playlist.id) { ++state.localPlaylistGeneration; state.localPlaylist = null; renderLocalPlaylist(); } await refreshCreatedPlaylists(); toast('Playlist deleted.'); }
-    catch (error) { toast(error.message, true); }
+    try {
+      if (!await confirmInApp('Delete “' + (playlist.name || playlist.title) + '” from this computer?', 'Delete playlist') || state.localPlaylist !== playlist) return;
+      await api('/api/local-playlists/' + encodeURIComponent(playlist.id) + '/delete', { method: 'POST', body: '{}' });
+      if (state.localPlaylist && state.localPlaylist.id === playlist.id) { ++state.localPlaylistGeneration; state.localPlaylist = null; renderLocalPlaylist(); }
+      await refreshCreatedPlaylists(); toast('Playlist deleted.');
+    } catch (error) { toast(error.message, true); }
     finally { state.localMutationBusy = false; renderLocalReadiness(); }
   }
   async function refreshCreatedPlaylists() {
@@ -1563,12 +1578,14 @@
   function toggleQueue(open) { toggleSidebar('queue', open); }
   function renderQueue() {
     const queue = state.queue, items = queue && Array.isArray(queue.items) ? queue.items : [];
+    $('player-queue-warning').hidden = !(queue && queue.active && queue.warning); $('player-queue-warning').textContent = queue && queue.active ? queue.warning || '' : '';
     $('player-queue-button').setAttribute('aria-expanded', String(state.queueOpen)); $('player-queue-button').textContent = 'Queue' + (items.filter(function (item) { return item.state === 'pending'; }).length ? ' · ' + items.filter(function (item) { return item.state === 'pending'; }).length : '');
     $('queue-progress').hidden = !state.queueOpen;
     $('queue-title').textContent = queue ? queue.title || 'Your song queue' : 'Your song queue';
     const mismatch = queueReady() && (normalizeCountry(queue.country) !== $('country-select').value || queue.providerId !== state.providerId);
     const track = queue && queue.currentTrack; $('queue-track').textContent = track ? 'Current · ' + track.title + (track.artist ? ' · ' + track.artist : '') : '';
     $('queue-message').textContent = queue ? queue.message || ({ ready: 'Ready when you are. Select an Echo, then choose Start.', preparing: 'Preparing your playlist…', playing: 'Playing songs on your Echo.', paused: 'Queue paused.', needs_attention: 'The queue needs your attention.', completed: 'Queue completed.', cancelled: 'Automatic queue playback stopped.', error: 'The queue could not continue.' }[queue.state] || '') : 'Add a song from search or a playlist. Music already playing stays on your Echo.';
+    if (queue && queue.warning && $('queue-message').textContent.indexOf(queue.warning) === -1) $('queue-message').textContent = queue.warning + ' ' + $('queue-message').textContent;
     if (mismatch) $('queue-message').textContent = 'Select ' + countryName(queue.country) + ' and ' + (queue.providerName || providerName(queue.providerId)) + ' to start this saved queue.';
     $('queue-provider').textContent = queue ? (queue.providerName ? 'Next songs: ' + queue.providerName + '. ' : '') + (queue.country ? 'Catalogue: ' + countryName(queue.country) + '. ' : '') + (queue.currentProviderName ? 'Current song service: ' + queue.currentProviderName + '.' : 'Reported playback appears in the player.') : '';
     const paused = queue && ['paused', 'needs_attention'].includes(queue.state), ready = queueReady(); $('queue-toggle').textContent = ready ? 'Start' : paused ? 'Resume' : 'Pause'; $('queue-toggle').dataset.action = ready ? 'start' : paused ? 'resume' : 'pause';

@@ -217,6 +217,10 @@ The queue sidebar lets you inspect and edit upcoming songs. Play/pause, previous
 
 Where offered, **Play playlist directly** asks Alexa to play the named playlist through its native service. This is separate from the helper's song-by-song queue; Alexa still needs to recognize and have access to that playlist.
 
+### When Alexa plays the wrong song
+
+After all song-request attempts fail with a confirmed mismatch, the helper can keep the recording Alexa is already playing as the current queue slot. It shows a warning with the requested and actual song, confirms stable advancing playback, and watches that recording to its end before requesting the next queued song. It sends no extra playback command to accept the substitute, does not insert an extra item, and keeps the pending order intact. The saved playlist and Repeat All source cycle retain the originally requested song. Unknown, paused, stopped, or incomplete playback information still requires attention rather than assuming a song ended.
+
 ### Recover a queue after a manual correction
 
 If a queued song cannot be confirmed, the remaining queue stays available. After a manual command starts identifiable music, the helper waits for two stable observations with advancing song progress, inserts that actual song immediately after the failed item, and treats it as current without requesting it again.
@@ -284,6 +288,8 @@ npm test
 | Dependency lockfile | Stop the helper, run `npm ci --ignore-scripts`, then restart. |
 
 Keep private backups before moving or replacing an installation. The original separate web-app project is not a dependency of this repository.
+
+App-owned questions and confirmations use dialogs inside Echo Library rather than native browser alert/confirm/prompt boxes. Provider sign-in still opens the provider’s own authorization window.
 
 ## Troubleshooting
 

@@ -103,3 +103,5 @@ select,.sidebar select,.search-form select,.playlist-toolbar select,.playlist-di
 @media(max-width:1250px){.player-controls{padding-left:0;padding-right:0;gap:10px}}@media(max-width:480px){.player-controls{gap:8px}.player-mode-button svg{width:18px;height:18px}}
 
 .playlist-source-attribution{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;font-size:11px;line-height:1.7;margin:0 0 9px;overflow-wrap:anywhere}.playlist-source-attribution[hidden]{display:none}.playlist-source-author{color:var(--muted)}.playlist-source-attribution .playlist-source-link{margin-top:0;color:var(--accent);font-size:inherit;line-height:inherit;text-underline-offset:3px}.playlist-card .playlist-source-attribution{margin:0 0 10px}.playlist-source-link:hover{color:var(--ink)}
+
+.player-queue-warning{color:var(--accent);font-size:11px;line-height:1.4;max-width:540px;overflow-wrap:anywhere}.app-confirm-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px}
