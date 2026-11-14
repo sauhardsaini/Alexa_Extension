@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Echo Companion",
+  "version": "0.4.0",
+  "description": "Open the complete Echo Library web app through your local Echo Companion helper.",
+  "minimum_chrome_version": "111",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ],
+  "action": {
+    "default_title": "Open Echo Companion music library",
+    "default_icon": {
+      "16": "icons/echo-16.png",
+      "32": "icons/echo-32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: data:; connect-src 'self' http://127.0.0.1:4320; object-src 'none'; base-uri 'none'; form-action 'self'"
+  },
+  "icons": {
+    "16": "icons/echo-16.png",
+    "32": "icons/echo-32.png",
+    "48": "icons/echo-48.png",
+    "128": "icons/echo-128.png"
+  },
+  "options_page": "app.html"
+}

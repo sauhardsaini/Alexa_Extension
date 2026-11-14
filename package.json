@@ -1,0 +1,23 @@
+{
+  "name": "echo-companion",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "description": "The complete Echo Library web app, launched from a browser extension and hosted by a local helper.",
+  "engines": {
+    "node": ">=18.20"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "dependencies": {
+    "alexa-remote2": "8.1.1"
+  },
+  "overrides": {
+    "alexa-cookie2": {
+      "cookie": "0.7.2"
+    }
+  }
+}

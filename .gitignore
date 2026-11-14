@@ -1,0 +1,14 @@
+.local/
+.DS_Store
+*.log
+node_modules/
+.npm-cache/
+.env
+.env.*
+!.env.example
+*.p8
+*.pem
+*.key
+*.p12
+*.pfx
+*.har

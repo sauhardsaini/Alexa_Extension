@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Echo Companion</title>
+  <link rel="stylesheet" href="popup.css">
+  <script src="popup.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M8 14v4m5-10v16m6-19v22m5-15v8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></span><div><h1>Echo <span>Companion</span></h1><p>YOUR BROWSER. YOUR ECHO.</p></div></div>
+    <div class="connection-row"><div class="connection-badge" id="connection-badge"><span class="status-dot" aria-hidden="true"></span><span id="connection-label">Checking connection</span></div><button id="manage-amazon-button" class="manage-amazon" type="button">Manage Amazon ↗</button></div>
+  </header>
+  <main>
+    <section class="amazon-setup-card" id="amazon-setup-card" aria-label="Amazon connection"><div><h2 id="amazon-setup-title">Finish extension setup</h2><p id="amazon-setup-note">Amazon sign-in and browser pairing are separate. Pair this extension below to use your Echo.</p></div><button id="connect-amazon-button" type="button">Open setup ↗</button></section>
+    <section class="track-section" aria-labelledby="track-section-title">
+      <div class="section-line"><h2 id="track-section-title">FROM THIS TAB</h2><button class="icon-button" id="refresh-button" type="button" aria-label="Refresh song details" title="Refresh song details"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 6.1A8 8 0 0 1 19 8l1 4M4 12l1 4a8 8 0 0 0 12.9 1.9"/></svg></button></div>
+      <div class="track-card">
+        <div class="record-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="19" stroke="currentColor" stroke-width="1.2"/><circle cx="24" cy="24" r="11" stroke="currentColor" stroke-width="1.1"/><circle cx="24" cy="24" r="3" fill="currentColor"/><path d="M10 24a14 14 0 0 1 14-14m0 28a14 14 0 0 0 14-14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+        <div class="track-copy"><span class="source-label" id="source-label">Open a music player</span><h3 id="track-title">Find your next listen.</h3><p id="track-artist">Apple Music, Spotify or YouTube Music</p></div>
+      </div>
+      <div id="source-reader-warning" class="source-reader-warning" role="status" aria-live="polite" hidden><p id="source-reader-message">The extension cannot read this music page yet.</p><p>Reload this music webpage after updating Echo Companion.</p><button id="reload-source-button" type="button">Reload music tab ↻</button></div>
+      <p class="track-note" id="track-note">Open a supported music website, then choose a song.</p>
+      <div class="track-fields">
+        <label for="song-title">Song title<input id="song-title" type="text" maxlength="250" autocomplete="off" spellcheck="false" placeholder="Song title"></label>
+        <div class="artist-field"><label for="song-artist">Artist<input id="song-artist" type="text" maxlength="250" autocomplete="off" spellcheck="false" placeholder="Artist name" aria-describedby="song-featured-credit"></label><p id="song-featured-credit" class="featured-credit-note" hidden></p></div>
+      </div>
+    </section>
+    <section class="destination-section" aria-labelledby="destination-title">
+      <h2 id="destination-title">PLAY ON</h2>
+      <label class="field-label" for="device-select">Echo speaker</label><select id="device-select"><option value="">Choose your Echo</option></select>
+      <div class="destination-grid">
+        <label for="provider-select">Streaming service<select id="provider-select"><option value="apple-music">Apple Music</option><option value="amazon-music">Amazon Music</option><option value="spotify">Spotify</option><option value="jiosaavn">JioSaavn</option><option value="alexa-default">Alexa default</option></select></label>
+        <label for="country-select">Catalogue country<select id="country-select"><option value="IN">India</option><option value="US">US</option><option value="GB">UK</option><option value="DE">Germany</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="JP">Japan</option></select></label>
+      </div>
+      <button class="primary-button" id="play-button" type="button" disabled><span>Play on Echo</span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="m9 5 11 7-11 7V5Z" fill="currentColor"/><path d="M4 5v14" stroke="currentColor" stroke-width="1.6"/></svg></button>
+      <div class="playback-controls" aria-label="Music playback controls"><button id="resume-button" type="button" aria-label="Play on Echo" disabled><svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="m4 2 10 6-10 6z"/></svg>Play</button><button id="pause-button" type="button" aria-label="Pause Echo" disabled><svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M4 3h3v10H4zm5 0h3v10H9z"/></svg>Pause</button><button id="next-button" type="button" aria-label="Next song in the browser" disabled><svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="m3 3 8 5-8 5zm9 0h2v10h-2z"/></svg>Next</button></div><p class="control-note" id="source-control-note">Play and Pause control your Echo. Open a supported music tab to use Next.</p>
+    </section>
+    <section class="handoff-status" id="handoff-status" role="status" aria-live="polite" hidden><div class="section-line"><h2 id="handoff-heading">Waiting for your Echo</h2><span class="handoff-indicator" aria-hidden="true"></span></div><p id="handoff-song" class="handoff-song"></p><p id="handoff-message"></p><button id="cancel-handoff-button" type="button">Cancel handoff</button></section>
+    <section class="echo-player-section" aria-labelledby="echo-player-heading">
+      <div class="section-line"><h2 id="echo-player-heading">NOW PLAYING ON ECHO</h2><span id="echo-player-state" class="echo-player-state"></span></div>
+      <div id="echo-quiet-status" class="echo-quiet-status" role="status" aria-live="polite" hidden><h3 id="echo-quiet-heading">Echo checking very quietly</h3><p id="echo-quiet-message"></p></div>
+      <h3 id="echo-player-title">Waiting for your Echo.</h3><p id="echo-player-artist" class="echo-player-artist">Playback details will appear here.</p>
+      <label class="sr-only" for="echo-seek">Seek on Echo</label>
+      <input id="echo-seek" class="echo-range" type="range" min="0" max="1000" step="1000" value="0" aria-describedby="echo-seek-note" aria-valuetext="Playback position unavailable" disabled>
+      <div class="seek-times"><output id="echo-position" for="echo-seek">—</output><span id="echo-duration">—</span></div>
+      <p id="echo-seek-note" class="range-note">Waiting for the Echo's reported song position and duration.</p>
+      <div class="volume-line"><label id="echo-volume-label" for="echo-volume">Echo volume</label><output id="echo-volume-value" for="echo-volume">—</output></div>
+      <input id="echo-volume" class="echo-range" type="range" min="0" max="100" step="1" value="0" aria-describedby="echo-volume-note" aria-valuetext="Volume unavailable" disabled>
+      <p id="echo-volume-note" class="range-note">Waiting for the Echo's reported volume.</p>
+    </section>
+    <section class="follow-card" aria-labelledby="follow-title">
+      <div class="follow-heading"><div><h2 id="follow-title">Follow this tab</h2><p id="follow-description">Send each new song to your Echo automatically.</p></div><label class="switch"><input id="follow-toggle" type="checkbox" role="switch" aria-label="Follow this tab" aria-describedby="follow-description follow-note"><span class="switch-track" aria-hidden="true"></span></label></div>
+      <p id="follow-note" class="follow-note">Only one tab is followed. Turning this off safely ends pending song checks.</p>
+    </section>
+    <section class="custom-command-section" aria-labelledby="custom-command-heading">
+      <div class="section-line"><h2 id="custom-command-heading">SEND TO ALEXA</h2><span id="custom-command-target" class="custom-target">Choose your Echo above.</span></div>
+      <form id="custom-command-form" autocomplete="off"><label class="sr-only" for="custom-command-input">Command for Alexa</label><div class="custom-command-row"><input id="custom-command-input" type="text" maxlength="500" placeholder="Ask Alexa or type a command" autocomplete="off" spellcheck="false" aria-describedby="custom-command-note"><button id="custom-command-send" type="submit" disabled>Send ↗</button></div></form>
+      <p id="custom-command-note" class="range-note">Send a single-line command of up to 500 characters. Sending pauses automatic following so song requests do not override it.</p>
+      <div id="custom-command-result" class="custom-command-result" hidden><p class="command-detail-label">LATEST CUSTOM REQUEST</p><p id="custom-command-text" class="custom-command-text"></p><p id="custom-command-status" class="custom-command-status"></p><p class="command-detail-label">ALEXA RESPONSE</p><blockquote id="custom-command-response">Alexa response unavailable.</blockquote></div>
+    </section>
+    <div class="result-message" id="result-message" role="status" aria-live="polite" hidden></div>
+    <details class="pairing" id="pairing-section">
+      <summary><span>Connect to local helper</span><span aria-hidden="true">＋</span></summary>
+      <div class="pairing-body"><p id="pairing-description">Open the helper on this Mac, create a pairing code, then paste it here.</p><button class="text-button" id="open-helper-button" type="button">Open local helper ↗</button><form id="pair-form" autocomplete="off"><label for="pair-token">Pairing code<input id="pair-token" type="password" maxlength="200" placeholder="Paste your pairing code" autocomplete="off" spellcheck="false"></label><button class="secondary-button" id="pair-button" type="submit">Save connection</button></form><p class="small-note">The connection is saved in this browser. Your music-service sign-in stays on its website.</p></div>
+    </details>
+    <footer><span class="footer-dot" aria-hidden="true"></span><p>Echo streams the music directly.<br><span>Keep the local helper running on this Mac.</span><span class="extension-version">Version 0.2.10</span></p></footer>
+  </main>
+</body>
+</html>

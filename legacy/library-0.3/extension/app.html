@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171b">
+  <meta name="color-scheme" content="dark">
+  <title>Echo Companion — Browse. Tap. Listen.</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%23d88654'/%3E%3Cpath d='M12 25V15m6 15V10m6 17V13m6 10v-6' stroke='%23171a20' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="app.css">
+  <script src="extension-api.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#search-input">Skip to music search</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Connection and speaker">
+      <a class="brand" href="app.html" aria-label="Echo Companion home">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 28 28"><path d="M5 18V10m6 13V5m6 15V8m6 9v-6"/></svg></span>
+        <span>echo<span class="brand-light">companion</span><small>YOUR MUSIC, WITHIN REACH</small></span>
+      </a>
+      <div class="sidebar-rule"></div>
+      <details class="extension-pairing" id="extension-pairing" open>
+        <summary>Local helper <span aria-hidden="true">＋</span></summary>
+        <p id="extension-pairing-status" role="status">Checking the local helper…</p>
+        <form id="extension-pairing-form" autocomplete="off">
+          <label for="extension-pairing-code">Pairing code</label>
+          <input id="extension-pairing-code" type="password" maxlength="150" autocomplete="off" spellcheck="false" placeholder="Paste the helper’s pairing code" aria-describedby="extension-pairing-note">
+          <button class="button button-accent full-width" id="extension-pairing-save" type="submit">Save connection</button>
+        </form>
+        <div class="extension-pairing-actions"><button class="text-button" id="extension-open-helper" type="button">Open local helper ↗</button><button class="text-button" id="extension-helper-retry" type="button">Retry connection</button></div>
+        <p class="pairing-note" id="extension-pairing-note">Keep the Echo Companion helper running on this Mac. Open it to create a pairing code.</p>
+      </details>
+      <div class="section-eyebrow">YOUR CONNECTION</div>
+      <section class="connection-card" aria-labelledby="connection-title">
+        <div class="connection-heading"><span class="status-dot" id="connection-dot"></span><h2 id="connection-title">Connect your Echo</h2></div>
+        <p id="connection-message">Checking your connection…</p>
+        <form id="connect-form">
+          <div id="connection-fields">
+            <label for="region-select">Amazon account region</label>
+            <select id="region-select" name="region">
+              <option value="IN">India</option><option value="US">United States</option><option value="UK">United Kingdom</option><option value="DE">Germany</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="JP">Japan</option>
+            </select>
+            <label for="locale-select">Echo language</label>
+            <select id="locale-select" name="locale">
+              <option value="en-IN">English (India)</option><option value="en-US">English (US)</option><option value="en-GB">English (UK)</option><option value="en-CA">English (Canada)</option><option value="en-AU">English (Australia)</option><option value="de-DE">German</option><option value="ja-JP">Japanese</option><option value="hi-IN">Hindi</option>
+            </select>
+          </div>
+          <button class="button button-accent full-width" id="connect-button" type="submit">Connect Amazon <span aria-hidden="true">↗</span></button>
+        </form>
+        <a class="button button-accent full-width" id="login-link" target="_blank" rel="noopener noreferrer" hidden>Open Amazon sign-in <span aria-hidden="true">↗</span></a>
+        <button class="text-button" id="disconnect-button" type="button" hidden>Disconnect account</button>
+        <p class="privacy-note" id="privacy-note">Sign in through a local Amazon connection. Your session stays on this computer.</p>
+      </section>
+      <section class="speaker-section" aria-labelledby="speaker-title">
+        <div class="section-eyebrow" id="speaker-title">PLAY ON</div>
+        <label class="sr-only" for="device-select">Choose an Echo speaker</label>
+        <select id="device-select" disabled><option value="">Connect to find your Echo</option></select>
+        <p class="speaker-note" id="speaker-note">Your Echo streams the music directly.</p>
+        <label class="provider-label" for="provider-select">Streaming service</label>
+        <select id="provider-select"><option value="apple-music">Apple Music</option><option value="alexa-default">Alexa default</option><option value="amazon-music">Amazon Music</option><option value="spotify">Spotify</option><option value="jiosaavn">JioSaavn</option></select>
+        <p class="speaker-note provider-note" id="provider-note">Choose a service linked in your Alexa app. A listed service does not confirm account access or a subscription.</p>
+        <p class="provider-discovery" id="provider-discovery" role="status"></p>
+      </section>
+      <div class="sidebar-bottom">
+        <div class="native-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 11a10 10 0 0 1 14 0M8 14a6 6 0 0 1 8 0m-5 4 1-1 1 1"/></svg></div>
+        <p><strong>Native Echo playback</strong><br>Pick a song here. Hear it on your Echo.</p>
+      </div>
+    </aside>
+    <main id="main" class="main-content">
+      <header class="topbar"><span class="topbar-label">A LITTLE LESS ASKING. A LOT MORE LISTENING.</span><div class="topbar-actions"><span class="extension-version" id="extension-version">Echo Companion</span><button class="commands-toggle" id="commands-toggle" type="button" aria-controls="commands-drawer" aria-expanded="false">Commands <span aria-hidden="true">↗</span></button></div></header>
+      <nav class="browse-tabs" aria-label="Music browsing"><button type="button" id="search-tab" aria-pressed="true">Search</button><button type="button" id="playlists-tab" aria-pressed="false">My playlists</button></nav>
+      <section class="search-section" id="search-view-header" aria-labelledby="page-title">
+        <div class="section-eyebrow warm">BROWSE. TAP. LISTEN.</div>
+        <h1 id="page-title">Find your next <em>listen.</em></h1>
+        <p class="page-subtitle">Search for a song or artist. Send your pick straight to your Echo.</p>
+        <form class="search-form" id="search-form" role="search">
+          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+          <label class="sr-only" for="search-input">Search songs or artists</label>
+          <input id="search-input" name="q" type="search" placeholder="Song, artist, or something you love…" maxlength="120" autocomplete="off" required>
+          <label class="sr-only" for="country-select">Music catalogue country</label>
+          <select id="country-select" title="Music catalogue country"><option value="IN">India</option><option value="US">US</option><option value="GB">UK</option><option value="DE">Germany</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="JP">Japan</option></select>
+          <button class="button button-dark" id="search-button" type="submit">Search <span aria-hidden="true">↗</span></button>
+        </form>
+        <div class="suggestions"><span>Try a little</span><button type="button" data-query="Baby Justin Bieber">Justin Bieber</button><button type="button" data-query="Taylor Swift">Taylor Swift</button><button type="button" data-query="The Weeknd">The Weeknd</button></div>
+      </section>
+      <div class="notice" id="global-notice" role="status" hidden></div>
+      <section class="playback-progress" id="playback-progress" aria-label="Song request verification" hidden>
+        <div class="playback-progress-main"><span class="playback-progress-dot" id="playback-progress-dot" aria-hidden="true"></span><div><h2 id="playback-progress-title" role="status" aria-live="polite"></h2><p id="playback-progress-detail"></p><p class="playback-provider" id="playback-provider"></p></div></div>
+        <div class="playback-progress-actions"><span id="playback-attempt"></span><button id="cancel-retries-button" type="button">Cancel retries</button></div>
+        <p class="playback-cancel-note" id="playback-cancel-note">Cancelling retries leaves the current music playing.</p>
+      </section>
+
+      <section class="playlists-section" id="playlists-section" aria-labelledby="playlists-title" hidden>
+        <div class="section-eyebrow warm">YOUR MUSIC, COLLECTED</div><h1 id="playlists-title">Your saved <em>playlists.</em></h1><p class="page-subtitle">Create playlists or import songs from a playlist link.</p>
+        <div class="playlist-toolbar"><label for="playlist-source">Playlist source</label><select id="playlist-source"><option value="local" selected>Created &amp; imported</option></select><button type="button" id="playlists-refresh">Refresh</button><button type="button" id="new-playlist-button">＋ New playlist</button><button type="button" id="import-playlist-button">Import playlist</button></div>
+        <p class="playlist-service-note" id="playlist-service-note"></p><p class="playlist-status" id="playlist-status" role="status"></p><p class="playlist-connect-note" id="playlist-connect-note">Created and imported playlists stay on this computer. No music catalogue account connection is needed.</p>
+        <div class="playlist-grid" id="playlist-grid"></div>
+        <section class="playlist-preview" id="local-playlist-detail" aria-labelledby="local-playlist-title" hidden><div class="playlist-preview-heading"><div><div class="section-eyebrow warm">CREATED IN ECHO LIBRARY</div><h2 id="local-playlist-title"></h2><p class="playlist-service-note" id="local-playlist-meta"></p><p class="playlist-service-note imported-availability-note" id="local-playlist-import-note" hidden></p></div><button type="button" id="local-playlist-close" aria-label="Close created playlist"><svg class="close-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="local-playlist-toolbar"><button type="button" id="local-playlist-play">Play on Echo ↗</button><button type="button" id="local-playlist-native-play" hidden>Play playlist directly ↗</button><button type="button" id="local-playlist-rename">Rename</button><button type="button" id="local-playlist-delete">Delete playlist</button></div><p class="playlist-service-note" id="local-playlist-play-note" hidden></p><p class="playlist-status" id="local-playlist-status" role="status"></p><ol class="local-playlist-tracks" id="local-playlist-tracks"></ol></section>
+
+      </section>
+      <section class="results-section" aria-labelledby="results-title" aria-busy="false" id="results-section">
+        <div class="results-heading"><h2 id="results-title">Your next song is out there.</h2><span id="results-count"></span></div>
+        <p class="results-status" id="results-status" role="status"></p>
+        <div class="results-list" id="results-list"></div>
+        <div class="empty-state" id="empty-state">
+          <div class="record-scene" aria-hidden="true"><div class="record-shadow"></div><div class="record"><div class="record-label"><span>e</span></div></div><div class="record-tag">ONE TAP AWAY <span>↗</span></div></div>
+          <h3>A whole catalogue. Your favourite speaker.</h3>
+          <p>Start with a song you know, or an artist you want to hear more of.</p>
+        </div>
+      </section>
+      <footer class="catalogue-note" id="catalogue-footer"><span aria-hidden="true">ⓘ</span><p><span id="catalogue-source-note">Public catalogue for India. Availability on Apple Music and Alexa matching can differ.</span> <a id="catalogue-explore-link" href="https://music.apple.com/in/" target="_blank" rel="noopener noreferrer">Explore Apple Music ↗</a></p></footer>
+    </main>
+  </div>
+  <section class="player-bar" aria-label="Now playing on your Echo">
+    <div class="player-art" id="player-art" aria-hidden="true">♫</div>
+    <div class="player-track"><div class="player-eyebrow" id="player-state">READY WHEN YOU ARE</div><strong id="player-title">Your Echo, your soundtrack</strong><span id="player-artist">Connect your Echo and choose a song.</span><span class="player-provider" id="player-provider" hidden></span><div class="player-library-actions"><button type="button" id="player-queue-button" aria-controls="queue-progress" aria-expanded="false">Queue</button><span id="player-song-actions"></span></div></div>
+    <div class="player-controls">
+      <button id="previous-button" class="icon-button" type="button" aria-label="Previous song" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14m12-14L8 12l10 7z"/></svg></button>
+      <button id="toggle-button" class="icon-button player-toggle" type="button" aria-label="Resume playback" disabled><svg id="toggle-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7z"/></svg><svg id="toggle-pause-icon" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M8 5h2v14H8zm7 0h2v14h-2z"/></svg></button>
+      <button id="next-button" class="icon-button" type="button" aria-label="Next song" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M6 5l10 7-10 7z"/></svg></button>
+    </div>
+    <div class="player-seek" id="player-seek" data-state="unknown">
+      <output class="seek-time" id="seek-elapsed" for="seek-slider" aria-live="off">—:—</output>
+      <label class="sr-only" for="seek-slider">Song position</label>
+      <input class="seek-slider" id="seek-slider" type="range" min="0" max="1" step="1000" value="0" aria-valuetext="Song position unavailable for live or unknown-length audio" aria-describedby="seek-description" disabled>
+      <span class="seek-time" id="seek-duration">—:—</span><span class="seek-state" id="seek-status">Live / unknown</span>
+      <span class="sr-only" id="seek-description">Finish adjusting to request a position in the current song. Reported position comes from your Echo.</span>
+    </div>
+    <div class="player-volume" id="player-volume" data-state="unknown">
+      <svg class="volume-speaker-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg>
+      <label class="sr-only" for="volume-slider">Echo volume</label>
+      <input id="volume-slider" class="volume-slider" type="range" min="0" max="100" step="1" value="50" aria-valuetext="Current Echo volume unknown" aria-describedby="volume-description" disabled>
+      <output id="volume-value" for="volume-slider" aria-live="off" title="Current Echo volume unknown">—</output>
+      <span class="sr-only" id="volume-description">Adjust the selected Echo’s volume. The change is sent when you finish adjusting the slider.</span>
+    </div>
+    <div class="player-destination"><span class="status-dot" id="player-dot"></span><span id="player-device">NO ECHO CONNECTED</span></div>
+  </section>
+  <button class="commands-backdrop" id="commands-backdrop" type="button" aria-label="Close sidebar" tabindex="-1" hidden></button>
+  <aside class="side-drawer" id="right-sidebar" role="dialog" aria-labelledby="commands-title" aria-modal="false" tabindex="-1" hidden>
+    <header class="commands-header"><div><div class="section-eyebrow warm">YOUR ECHO, IN ONE PLACE</div><h2 id="commands-title">Commands</h2></div><button class="commands-close" id="commands-close" type="button" aria-label="Close sidebar"><svg class="close-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <div class="sidebar-tabs" role="tablist" aria-label="Echo sidebar"><button id="commands-sidebar-tab" type="button" role="tab" aria-selected="true" aria-controls="commands-drawer" tabindex="0">Commands</button><button id="queue-sidebar-tab" type="button" role="tab" aria-selected="false" aria-controls="queue-progress" tabindex="-1">Queue</button></div>
+    <section class="commands-panel" id="commands-drawer" role="tabpanel" aria-labelledby="commands-sidebar-tab" tabindex="-1" hidden>
+    <form class="custom-command-form" id="custom-command-form">
+      <label for="custom-command-input">Send a typed request</label>
+      <p id="custom-command-device">Connect an Echo to send a command.</p>
+      <div class="custom-command-entry"><input id="custom-command-input" type="text" name="text" maxlength="500" placeholder="e.g. What’s the weather?" autocomplete="off" aria-describedby="custom-command-note" disabled><button id="custom-command-submit" type="submit" disabled>Send <span aria-hidden="true">↗</span></button></div>
+      <p class="custom-command-note" id="custom-command-note">A custom command stops any automatic song retries.</p>
+    </form>
+    <div class="commands-history-heading"><h3>Sent from this app</h3><span>THIS SESSION</span></div>
+    <p class="commands-status" id="commands-status" role="status"></p>
+    <div class="commands-history" id="commands-history" tabindex="0" aria-label="Command history"><div class="commands-empty" id="commands-empty">Commands sent from this app appear here.</div><div id="commands-list"></div></div>
+    <p class="commands-retention">Up to 100 commands from this app session. Request status, Alexa response text, and reported playback are shown separately.</p>
+    </section>
+    <section class="queue-drawer" id="queue-progress" role="tabpanel" aria-labelledby="queue-sidebar-tab" tabindex="-1" hidden><div class="queue-summary"><div class="section-eyebrow warm">UP NEXT ON YOUR ECHO</div><h2 id="queue-title"></h2><p id="queue-track"></p><p id="queue-message" role="status"></p><p class="queue-provider" id="queue-provider"></p></div><div class="queue-controls"><button id="queue-toggle" type="button">Pause</button><button id="queue-next" type="button">Next</button><button id="queue-cancel" type="button">Clear queue</button></div><p class="queue-clear-note">Clearing the queue leaves the current music playing.</p><ol class="queue-items" id="queue-items" aria-label="Current song and up next"></ol></section>
+  </aside>
+  <dialog class="playlist-dialog" id="playlist-save-dialog" aria-labelledby="playlist-dialog-title"><form id="playlist-save-form"><div class="playlist-preview-heading"><h2 id="playlist-dialog-title">Add to playlist</h2><button type="button" id="playlist-dialog-close" aria-label="Close playlist dialog"><svg class="close-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><p id="playlist-dialog-song" class="playlist-service-note"></p><div id="playlist-existing-group"><label for="playlist-save-target">Created playlist</label><select id="playlist-save-target"><option value="">Create a new playlist</option></select></div><div id="playlist-name-group"><label for="playlist-save-name">Playlist name</label><input id="playlist-save-name" type="text" maxlength="100" autocomplete="off" placeholder="e.g. Evening favourites"></div><div id="playlist-country-group"><label for="playlist-save-country">Playlist country</label><select id="playlist-save-country"><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="DE">Germany</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="JP">Japan</option></select></div><p class="playlist-service-note">Songs stay in the playlist’s country. Your playlists are saved on this computer.</p><p class="playlist-status" id="playlist-dialog-status" role="status"></p><button class="button button-accent" id="playlist-save-submit" type="submit">Save</button></form></dialog>
+  <dialog class="playlist-dialog playlist-import-dialog" id="playlist-import-dialog" aria-labelledby="playlist-import-title"><form id="playlist-import-form" novalidate><div class="playlist-preview-heading"><h2 id="playlist-import-title">Import playlist</h2><button type="button" id="playlist-import-close" aria-label="Close playlist import"><svg class="close-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><p class="playlist-service-note">Import song details into a Created playlist. Playback availability on your selected Echo service is unverified. Nothing plays when you save.</p><div class="playlist-import-fields"><div><label for="playlist-import-name">Playlist name</label><input id="playlist-import-name" type="text" maxlength="100" autocomplete="off" required></div><div><label for="playlist-import-country">Playlist country</label><select id="playlist-import-country"><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="DE">Germany</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="JP">Japan</option></select></div></div><label for="playlist-import-platform">Playlist platform</label><select id="playlist-import-platform" aria-describedby="playlist-import-source-note"><option value="youtube-music">YouTube Music / YouTube</option><option value="spotify">Spotify</option><option value="apple-music">Apple Music</option><option value="amazon-music">Amazon Music</option><option value="jiosaavn">JioSaavn</option></select><p class="playlist-service-note" id="playlist-import-source-note"></p><label for="playlist-import-url">Playlist link <span class="import-optional">(optional)</span></label><div class="playlist-import-link"><input id="playlist-import-url" type="url" autocomplete="off" placeholder="https://music.youtube.com/playlist?list=…" aria-describedby="playlist-import-link-note"><button id="playlist-import-load" type="button">Load songs</button></div><p class="playlist-service-note" id="playlist-import-link-note">Load a public playlist link, or paste songs below. Private or incomplete playlists may need pasted song details.</p><div id="playlist-import-native-group" hidden><label id="playlist-import-native-label" for="playlist-import-native-name">Playlist name on this service <span class="import-optional">(optional)</span></label><input id="playlist-import-native-name" type="text" maxlength="250" autocomplete="off" aria-describedby="playlist-import-native-note"><p class="playlist-service-note" id="playlist-import-native-note">Only enter a name if the playlist already exists on this service. This adds a separate direct-play option; your saved songs stay here.</p></div><label for="playlist-import-text">Songs <span class="import-optional">— one song per line</span></label><textarea id="playlist-import-text" rows="10" maxlength="300000" spellcheck="false" placeholder="Song title — Artist" aria-describedby="playlist-import-format playlist-import-review" required></textarea><p class="playlist-service-note" id="playlist-import-format">Use Title — Artist, with a spaced em dash. Up to 500 songs; review every missing artist before saving.</p><p class="playlist-status" id="playlist-import-status" role="status" aria-live="polite"></p><p class="playlist-service-note" id="playlist-import-review" role="status"></p><button class="button button-accent" id="playlist-import-save" type="submit">Save to Created</button></form></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

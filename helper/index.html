@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Echo Companion — Connect your Echo</title><link rel="stylesheet" href="/helper.css"><script src="/helper.js" defer></script></head>
+<body><main>
+<p class="eyebrow">YOUR MUSIC, YOUR ECHO</p><h1>One browser.<br>More listening.</h1>
+<p class="intro">This local helper serves the complete Echo Library app and maintains its Amazon connection.</p>
+<p><a class="button-link primary" href="/">Open Echo Library ↗</a></p>
+<section class="card amazon-card" id="amazon-connection" aria-labelledby="amazon-title">
+  <div class="step-line"><span class="step-label">STEP 01</span><span id="amazon-state-label" class="state-label">Checking connection</span></div>
+  <div class="card-title"><span class="dot" id="amazon-dot" aria-hidden="true"></span><h2 id="amazon-title">Connect Amazon</h2></div>
+  <p class="card-description">Use the Amazon account your Echo is registered to.</p>
+  <p id="amazon-status" class="status" role="status" aria-live="polite">Checking your Amazon connection…</p>
+  <form id="amazon-connect-form">
+    <div class="account-fields" id="amazon-fields">
+      <label for="amazon-region">Amazon account region<select id="amazon-region" name="region"><option value="IN">India</option><option value="US">United States</option><option value="UK">United Kingdom</option><option value="DE">Germany</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="JP">Japan</option></select></label>
+      <label for="amazon-locale">Echo language<select id="amazon-locale" name="locale"><option value="">Use region default</option><option value="en-IN">English (India)</option><option value="hi-IN">Hindi</option><option value="en-US">English (US)</option><option value="en-GB">English (UK)</option><option value="en-CA">English (Canada)</option><option value="fr-CA">French (Canada)</option><option value="en-AU">English (Australia)</option><option value="de-DE">German</option><option value="ja-JP">Japanese</option></select></label>
+    </div>
+    <div class="actions amazon-actions"><button id="connect-amazon" type="submit" class="primary">Connect Amazon ↗</button><a id="amazon-login-link" class="button-link primary" target="_blank" rel="noopener noreferrer" hidden>Open Amazon sign-in ↗</a><button id="disconnect-amazon" type="button" hidden>Disconnect Amazon</button></div>
+  </form>
+  <p id="amazon-message" role="status" class="message"></p>
+  <p id="amazon-devices" class="device-summary" hidden></p>
+  <p class="permission-note">Sign in through Amazon’s local connection. This project saves its own private session on this Mac, separately from your other apps.</p>
+</section>
+<section class="card" aria-labelledby="pair-title">
+  <div class="step-line"><span class="step-label">STEP 02</span></div>
+  <div class="card-title"><span class="dot" aria-hidden="true"></span><h2 id="pair-title">Optional extension API pairing</h2></div>
+  <p class="card-description">The current extension opens the full local web app and does not need a pairing code. These controls remain available for older paired API clients.</p>
+  <p class="permission-note">Only create or replace a code when connecting an API client that asks for it. Pairing permits that client to send Echo requests through this helper.</p>
+  <p id="pair-status" class="status" role="status">Checking pairing…</p>
+  <div class="actions"><button id="create-pair" class="primary" type="button">Create pairing code</button><button id="revoke-pair" type="button" hidden>Disconnect extension</button></div>
+  <div id="code-section" hidden><label for="pair-code">Your pairing code — shown once</label><div class="code-row"><input id="pair-code" readonly type="password" autocomplete="off" spellcheck="false"><button id="copy-code" type="button">Copy</button></div><p class="small">Paste this code only into Echo Companion. Creating another code replaces the previous connection.</p></div><p id="message" role="status" class="message"></p>
+</section>
+<footer>Keep this helper running while using the extension. Your Echo streams through the music service linked in Alexa.</footer>
+</main></body></html>
