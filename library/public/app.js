@@ -743,6 +743,82 @@
       }
     }
   }
+  function createMacMediaBridge(options) {
+    const session = options.session;
+    let enabled = false, audio = null, metadataKey = '', generation = 0;
+    const actions = { play: 'resume', pause: 'pause', nexttrack: 'next', previoustrack: 'previous' };
+    function current() {
+      const snapshot = options.snapshot(), player = snapshot.player;
+      return snapshot.available && player && (!player.deviceId || player.deviceId === snapshot.deviceId)
+        && ['PLAYING', 'PAUSED'].includes(player.state) && player.title ? snapshot : null;
+    }
+    function clear() {
+      metadataKey = ''; session.metadata = null; session.playbackState = 'none';
+      try { session.setPositionState && session.setPositionState(); } catch (_) {}
+    }
+    function update() {
+      if (!enabled) return;
+      const snapshot = current();
+      if (!snapshot) { clear(); if (audio) audio.pause(); return; }
+      const player = snapshot.player;
+      const key = JSON.stringify([snapshot.deviceId, player.title, player.artist, player.album, player.artwork]);
+      if (key !== metadataKey) {
+        const artwork = typeof player.artwork === 'string' && /^https:\/\//.test(player.artwork) ? [{ src: player.artwork }] : [];
+        session.metadata = options.metadata({ title: player.title, artist: player.artist || '', album: player.album || 'Playing on Echo', artwork: artwork });
+        metadataKey = key;
+      }
+      session.playbackState = player.state === 'PLAYING' ? 'playing' : 'paused';
+      try {
+        if (session.setPositionState && Number.isFinite(player.durationMs) && player.durationMs > 0 && Number.isFinite(player.positionMs))
+          session.setPositionState({ duration: player.durationMs / 1000, position: Math.max(0, Math.min(player.positionMs, player.durationMs)) / 1000, playbackRate: 1 });
+        else if (session.setPositionState) session.setPositionState();
+      } catch (_) {}
+      if (audio && player.state === 'PAUSED') audio.pause();
+      else if (audio && audio.paused) audio.play().catch(function () { options.notice('Disable and re-enable Mac media controls to reconnect Now Playing.'); });
+    }
+    async function disable() {
+      ++generation; enabled = false;
+      Object.keys(actions).forEach(function (action) { try { session.setActionHandler(action, null); } catch (_) {} });
+      clear();
+      if (audio) { audio.pause(); audio.removeAttribute('src'); audio.load(); }
+      audio = null;
+      options.changed(false);
+    }
+    async function enable() {
+      if (enabled) { update(); return; }
+      const revision = ++generation;
+      try {
+        // A finite PCM file requests persistent media focus; MediaStreams
+        // are treated as transient playback by Chromium. All samples are zero.
+        audio = options.audio(); audio.src = '/media-session.wav'; audio.loop = true; audio.volume = 1;
+        await audio.play();
+        if (revision !== generation) return;
+        Object.keys(actions).forEach(function (action) {
+          try { session.setActionHandler(action, function () {
+            const snapshot = current();
+            if (!enabled || !snapshot || snapshot.busy) return;
+            Promise.resolve(options.control(actions[action])).catch(function () { options.notice('The Echo control was not confirmed. Check the app.'); });
+          }); } catch (_) {}
+        });
+        enabled = true; options.changed(true); update();
+      } catch (_) { await disable(); options.notice('Mac media controls could not start. Check browser playback permissions and try again.'); }
+    }
+    return { enable: enable, disable: disable, update: update, get enabled() { return enabled; } };
+  }
+  function initMacMedia() {
+    const button = $('mac-media-toggle'), note = $('mac-media-note');
+    if (!window.Audio || !window.MediaMetadata || !navigator.mediaSession) { button.hidden = true; note.textContent = 'System media controls are not available in this browser.'; return; }
+    state.macMedia = createMacMediaBridge({ session: navigator.mediaSession,
+      audio: function () { return new window.Audio(); }, metadata: function (value) { return new window.MediaMetadata(value); },
+      snapshot: function () { return { deviceId: state.deviceId, available: canPlay() && !state.playerStale && !state.deviceChanging, player: state.player,
+        busy: state.controlBusy || state.customCommandBusy || state.queueBusy || state.queueModeBusy || state.deviceChanging || state.providerChanging }; },
+      control: control,
+      notice: function (message) { note.textContent = message; },
+      changed: function (enabled) { button.textContent = enabled ? 'Disable Mac media controls' : 'Enable Mac media controls'; button.setAttribute('aria-pressed', String(enabled)); note.textContent = enabled ? 'Keep this tab open. Now Playing uses a silent local session; keys control your Echo. Other media apps can take priority.' : 'Optional: show Echo playback in Mac Now Playing using a silent local session.'; }
+    });
+    button.addEventListener('click', async function () { button.disabled = true; try { if (state.macMedia.enabled) await state.macMedia.disable(); else await state.macMedia.enable(); } finally { button.disabled = false; } });
+    window.addEventListener('pagehide', function () { state.macMedia.disable(); });
+  }
   function renderPlayer() {
     const player = state.player; const available = canPlay();
     ['previous-button', 'toggle-button', 'next-button'].forEach(function (id) { $(id).disabled = !available || state.controlBusy || state.customCommandBusy || state.deviceChanging || state.queueModeBusy; });
@@ -762,9 +838,10 @@
       setArtwork($('player-art'), ''); $('player-provider').hidden = true; $('player-provider').textContent = '';
     }
     renderVolume(); renderSeek(); renderPlayerSongActions(); renderQueueModes();
+    if (state.macMedia) state.macMedia.update();
   }
   async function refreshPlayer() {
-    if (!canPlay() || state.playerBusy || state.deviceChanging || document.hidden) return;
+    if (!canPlay() || state.playerBusy || state.deviceChanging || (document.hidden && !(state.macMedia && state.macMedia.enabled))) return;
     syncVolumeDevice(); syncSeekContext();
     const deviceId = state.deviceId; const seekRevision = state.seekRevision; const volumeRevision = state.volumeRevision; const coordinatorWasActive = activePlayback(); state.playerBusy = true;
     try {
@@ -1867,5 +1944,6 @@
   $('next-button').addEventListener('click', function () { control('next'); });
   $('toggle-button').addEventListener('click', function () { control(state.player && state.player.state === 'PLAYING' ? 'pause' : 'resume'); });
   document.addEventListener('visibilitychange', function () { if (!document.hidden) { refreshStatus(); refreshPlayer(); if (state.commandsOpen) refreshCommands(); } else { clearTimeout(state.commandsTimer); if (state.commandsController) state.commandsController.abort(); } });
+  initMacMedia();
   renderCataloguePlatform(); renderProviders(); renderCatalogueSource(); renderApple(); renderSearchReadiness(); renderPlayback(); renderVolume(); renderSeek(); renderCustomCommand(); renderOAuth('spotify'); renderOAuth('youtube'); renderPlaylistSources(); renderQueue(); showOAuthCallbackNotice(); toggleCommands(true); refreshStatus(); refreshProviders(); setInterval(refreshPlayer, 5000); setInterval(renderSeek, 1000);
 }());

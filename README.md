@@ -311,6 +311,14 @@ App-owned questions and confirmations use dialogs inside Echo Library rather tha
 | The interface is old after an update | Apply the refresh/restart/extension-reload step for the type of file changed above. |
 | Queue stops progressing | Keep the helper/computer running, check Echo status and queue notices, and confirm the current song. A helper restart does not restore its old queue. |
 
+## Mac Now Playing and media keys
+
+Use **Enable Mac media controls** in the sidebar to opt into a local browser media-session proxy. It publishes the reported Echo title/artist/artwork and routes Play/Pause/Next/Previous through the same controls as the app, preserving queue routing. A looping 10-second WAV containing only zero PCM samples requests local media playback; the music still streams only on the Echo.
+
+Keep the enabled tab and helper open, including while the tab is in the background. Enable again after a page reload. Keep the tab unmuted: its carrier contains silence, and muting it can remove system media focus. Another media app can become the active system player. Updates follow Echo reporting, so allow a few seconds between controls.
+
+Verified locally in Brave on macOS: Now Playing shows Echo song details, and keyboard Play/Pause/Next/Previous control Echo, including the app playlist queue. The silent player pauses along with Echo so the next media-key press sends Resume. Other browser and macOS versions may behave differently.
+
 ## Limitations
 
 - Alexa access uses the third-party `alexa-remote2` integration, rather than a public Alexa music-control API. Amazon changes can affect login, commands, response text, or reported playback.

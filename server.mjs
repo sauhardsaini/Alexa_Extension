@@ -780,16 +780,16 @@ export async function createApp({ port = 4320, dataDir = path.join(ROOT, '.local
         if (!extensionOrigin || (pair.value?.extensionId && extensionOrigin !== `chrome-extension://${pair.value.extensionId}`)) fail(403, 'CROSS_ORIGIN', 'This browser extension is not paired.');
         res.writeHead(204); return res.end();
       }
-      if (library && req.method === 'GET' && ['/', '/app.js', '/app.css', '/favicon.ico'].includes(url.pathname)) {
+      if (library && req.method === 'GET' && ['/', '/app.js', '/app.css', '/media-session.wav', '/favicon.ico'].includes(url.pathname)) {
         const publicNavigation = url.pathname === '/' && req.headers['sec-fetch-mode'] === 'navigate' && req.headers['sec-fetch-dest'] === 'document';
         if (!isLocal && !publicNavigation) fail(403, 'CROSS_ORIGIN', 'Open Echo Library through its local helper.');
         if (url.pathname === '/favicon.ico') { res.writeHead(204); return res.end(); }
         const file = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
-        const type = file.endsWith('.html') ? 'text/html' : file.endsWith('.js') ? 'text/javascript' : 'text/css';
+        const type = file.endsWith('.html') ? 'text/html' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.wav') ? 'audio/wav' : 'text/css';
         res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
         res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' https://js-cdn.music.apple.com; style-src 'self'; connect-src 'self' https://api.music.apple.com https://*.music.apple.com https://*.itunes.apple.com; frame-src https://*.music.apple.com https://*.itunes.apple.com; img-src 'self' https: data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
         const content = await fs.readFile(path.join(ROOT, 'library', 'public', file));
-        res.writeHead(200, { 'Content-Type': type + '; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(content);
+        res.writeHead(200, { 'Content-Type': type + (file.endsWith('.wav') ? '' : '; charset=utf-8'), 'Cache-Control': 'no-store' }); return res.end(content);
       }
       if (req.method === 'GET' && ['/', '/setup', '/setup/', '/helper.js', '/helper.css', '/favicon.ico'].includes(url.pathname)) {
         // Opening the public pairing page from the extension is a cross-site navigation.

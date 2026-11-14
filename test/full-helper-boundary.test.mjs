@@ -112,3 +112,16 @@ test('loopback Host validation rejects DNS-rebinding names before any handler ru
   const response=await f.raw('/api/status',{Host:'evil.test:'+f.port,Origin:f.base});
   assert.equal(response.status,403);assert.equal(f.paths().length,0);
 });
+
+
+test('the opt-in media carrier is a same-origin finite WAV containing only silence',async t=>{
+  const f=await fixture(t), response=await fetch(f.base+'/media-session.wav');
+  assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'audio/wav');
+  const wav=Buffer.from(await response.arrayBuffer());
+  assert.equal(wav.toString('ascii',0,4),'RIFF');assert.equal(wav.toString('ascii',8,12),'WAVE');
+  assert.equal(wav.readUInt16LE(20),1);assert.equal(wav.readUInt16LE(22),1);
+  assert.equal(wav.readUInt32LE(24),8000);assert.equal(wav.readUInt16LE(34),16);
+  assert.equal(wav.readUInt32LE(40),160000);assert.ok(wav.subarray(44).every(sample=>sample===0));
+  for(const headers of [{Origin:'https://evil.test'},{'Sec-Fetch-Site':'cross-site'}])
+    assert.equal((await fetch(f.base+'/media-session.wav',{headers})).status,403);
+});
