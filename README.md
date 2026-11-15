@@ -11,6 +11,8 @@ This is a standalone project. It does not require a separate Echo Library web-ap
 - [Features](#features)
 - [Requirements](#requirements)
 - [Install and start](#install-and-start)
+- [Windows setup](#windows-powershell)
+- [Linux setup](#linux-desktop-terminal)
 - [Connect Amazon and your Echo](#connect-amazon-and-your-echo)
 - [Choose a streaming service](#choose-a-streaming-service)
 - [Optional music account connections](#optional-music-account-connections)
@@ -40,7 +42,7 @@ This is a standalone project. It does not require a separate Echo Library web-ap
 
 ## Requirements
 
-- **Node.js 18.20 or newer**, with npm, as declared in `package.json`.
+- **Node.js 18.20 or newer**, with npm, as declared in `package.json`. For a new installation, choose a currently supported **LTS** release from the [official Node.js downloads](https://nodejs.org/en/download).
 - **Chrome or Brave** with extension support. The manifest declares Chromium 111 or newer; development and live Echo checks have been performed on macOS with Brave and an Echo Dot 5th generation. Other operating systems/devices have not been live-verified.
 - An Amazon account with an Echo registered to it, and an online Echo.
 - Internet access for Amazon, catalogue searches, artwork, imports, and optional account authorization.
@@ -51,9 +53,17 @@ The `.command` launcher is for macOS. The terminal startup instructions below ar
 
 ## Install and start
 
+Choose the instructions for your computer. Replace `REPOSITORY_URL` in any example with your repository's clone URL. If the repository is already cloned, open its existing folder and skip the `git clone` step.
+
+| Platform | Setup instructions |
+| --- | --- |
+| Windows | [PowerShell setup](#windows-powershell) |
+| Linux desktop | [Terminal setup](#linux-desktop-terminal) |
+| macOS | [Fresh Git clone](#from-a-fresh-git-clone), then optionally the [macOS shortcut](#macos-shortcut) |
+
 ### From a fresh Git clone
 
-Replace `REPOSITORY_URL` with your repository's clone URL:
+These shared terminal commands are suitable for macOS and Linux. Windows PowerShell users should follow the dedicated section below.
 
 ```sh
 git clone REPOSITORY_URL Alexa_Extension
@@ -65,6 +75,96 @@ npm start
 Keep that terminal running, then open [Echo Library](http://127.0.0.1:4320/). Use this exact loopback address consistently for the app and account callbacks.
 
 `npm ci` installs the versions in `package-lock.json`. There is no separate frontend build. A fresh clone starts without saved accounts, sessions, playlists, or private credentials; the helper creates its own `.local/` data directory.
+
+### Windows (PowerShell)
+
+1. Install [Git for Windows](https://git-scm.com/install/windows).
+2. Install a current **Node.js LTS** release with npm using the Windows installer from [Node.js downloads](https://nodejs.org/en/download). Choose the installer matching your computer's architecture.
+3. Install Chrome or Brave, then open a **new PowerShell window** so it picks up the installed commands.
+4. Verify the tools:
+
+```powershell
+git --version
+node --version
+npm.cmd --version
+```
+
+Clone into your Windows user folder and start the helper:
+
+```powershell
+Set-Location "$env:USERPROFILE"
+git clone REPOSITORY_URL Alexa_Extension
+Set-Location .\Alexa_Extension
+npm.cmd ci --ignore-scripts
+npm.cmd start
+```
+
+The examples use `npm.cmd` to run npm directly from PowerShell, including on systems where `npm.ps1` is blocked by the script execution policy. Keep PowerShell open while using Echo Library.
+
+Open [http://127.0.0.1:4320/](http://127.0.0.1:4320/) in Chrome or Brave, follow [Load the browser extension](#load-the-browser-extension), then [connect Amazon and choose your Echo](#connect-amazon-and-your-echo). In the extension's folder picker, select `Alexa_Extension\extension` inside your checkout.
+
+For later starts, open PowerShell and run:
+
+```powershell
+Set-Location "$env:USERPROFILE\Alexa_Extension"
+npm.cmd start
+```
+
+If you cloned elsewhere, use that checkout's path instead. Stop the helper with **Ctrl-C** in this window; if Windows asks whether to terminate the batch job, confirm with **Y**.
+
+### Linux (desktop terminal)
+
+These instructions assume a Linux desktop with Chrome or Brave so you can complete Amazon and optional music-service sign-in in a browser.
+
+1. Install Git with your distribution's package manager; see the [official Linux instructions](https://git-scm.com/install/linux). For Debian/Ubuntu:
+
+```sh
+sudo apt-get update
+sudo apt-get install git
+```
+
+For Fedora:
+
+```sh
+sudo dnf install git
+```
+
+2. Install a current **Node.js LTS** release with npm using the Linux options on [Node.js downloads](https://nodejs.org/en/download) or the [npm installation guide](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/). Verify that `node --version` meets this project's minimum; a distribution's default Node.js package may be older.
+3. Install Chrome or Brave for your distribution. Open a new terminal and verify:
+
+```sh
+git --version
+node --version
+npm --version
+```
+
+Clone into your home folder and start the helper:
+
+```sh
+cd "$HOME"
+git clone REPOSITORY_URL Alexa_Extension
+cd Alexa_Extension
+npm ci --ignore-scripts
+npm start
+```
+
+Run the project from a folder writable by your normal user. Keep this terminal open and open [http://127.0.0.1:4320/](http://127.0.0.1:4320/) in Chrome or Brave. Follow [Load the browser extension](#load-the-browser-extension) and select `Alexa_Extension/extension`, then [connect Amazon and choose your Echo](#connect-amazon-and-your-echo).
+
+For later starts:
+
+```sh
+cd "$HOME/Alexa_Extension"
+npm start
+```
+
+Use your checkout's actual path if different. Stop the helper with **Ctrl-C**. Dependency installation is needed again when updating the lockfile; see [Development and updates](#development-and-updates).
+
+### Windows and Linux notes
+
+- Both platforms use the same local app address, Amazon connection flow, music-service setup, and playlist storage described below. The generated `.local/` folder lives inside that computer's checkout.
+- The extension toolbar opens the app after the helper is running. Terminal startup is the documented Windows/Linux launcher; `Start Echo Companion.command` is the macOS launcher.
+- The **Mac media controls** sidebar option uses the browser's Media Session support. Its label remains Mac-specific; system media controls and keyboard routing on Windows/Linux depend on the browser and desktop session and have not been verified. The app's own playback buttons remain the documented control path.
+- **Verification status:** Windows and Linux setup instructions are documented but have not been live-tested on those operating systems. Live Amazon/Echo and system media-key checks so far used Brave on macOS.
 
 ### Load the browser extension
 
@@ -302,6 +402,11 @@ App-owned questions and confirmations use dialogs inside Echo Library rather tha
 | Symptom | Check |
 | --- | --- |
 | Toolbar opens an unavailable page / connection refused | Start the helper and open `http://127.0.0.1:4320/`. The toolbar does not start Node.js. |
+| Windows reports `git`, `node`, or `npm.cmd` is not recognized | Finish installing Git and Node.js/npm, open a new PowerShell window, and check the version commands in [Windows setup](#windows-powershell). |
+| PowerShell reports that `npm.ps1` cannot be loaded | Use `npm.cmd ci --ignore-scripts` and `npm.cmd start` from the repository folder. |
+| Linux reports `node`/`npm` is missing or Node is too old | Install a supported Node.js LTS release with npm, open a new terminal, and verify `node --version` and `npm --version`. |
+| Linux cannot write dependencies or `.local/` data | Use a checkout writable by your normal user, such as the home-folder location in [Linux setup](#linux-desktop-terminal). |
+| System media keys do not control Echo on Windows/Linux | Use the app's player controls. System media-key integration has only been live-verified on macOS; browser and desktop-session behavior can differ. |
 | Node/npm is not found by the macOS launcher | Verify both commands in a terminal and use `npm start` from the project root. |
 | Port 4320 is already in use | Check whether another copy of the helper is running; use that copy or stop its own terminal before starting this one. |
 | Amazon sign-in reports a busy local port | Check for another Amazon sign-in/helper instance using port 4321. |
